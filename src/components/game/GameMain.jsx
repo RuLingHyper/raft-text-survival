@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ITEMS } from '../data/items';
+import { ITEMS } from '../../data/items';
 
 const GameMain = () => {
     // Oyuncunun envanterini tutacağımız React State
