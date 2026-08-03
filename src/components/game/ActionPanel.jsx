@@ -1,11 +1,37 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-// Kendi gameSlice'ındaki fonksiyon isimlerinin bunlar olduğundan emin ol:
 import { throwHook, gatherByHand, craftHook } from "../../store/gameSlice";
 import { Anchor, Hand, Hammer } from "lucide-react";
 
 const ActionPanel = ({ hasHook }) => {
     const dispatch = useDispatch();
+
+    // YENİ: Bekleme süresi (Cooldown) için State'ler
+    const [isHookCoolingDown, setIsHookCoolingDown] = useState(false);
+    const [cooldownTime, setCooldownTime] = useState(0);
+
+    // YENİ: Geri sayımı kontrol eden sistem
+    useEffect(() => {
+        let timer;
+        if (isHookCoolingDown && cooldownTime > 0) {
+            timer = setInterval(() => {
+                setCooldownTime((prev) => prev - 1);
+            }, 1000); // Her 1 saniyede (1000ms) bir sayıyı düşür
+        } else if (cooldownTime <= 0) {
+            setIsHookCoolingDown(false);
+            clearInterval(timer);
+        }
+        return () => clearInterval(timer);
+    }, [isHookCoolingDown, cooldownTime]);
+
+    // YENİ: Butona tıklandığında çalışacak olan özel fonksiyon
+    const handleThrowHook = () => {
+        if (isHookCoolingDown) return; // Zaten beklemedeyse hiçbir şey yapma (Spam engeli)
+
+        dispatch(throwHook()); // Kancayı at (Redux)
+        setIsHookCoolingDown(true); // Beklemeyi başlat
+        setCooldownTime(3); // 3 saniye bekle
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -13,17 +39,30 @@ const ActionPanel = ({ hasHook }) => {
             {/* EĞER KANCA VARSA: Sadece büyük fırlatma butonu görünür */}
             {hasHook ? (
                 <button
-                    onClick={() => dispatch(throwHook())}
+                    onClick={handleThrowHook}
+                    disabled={isHookCoolingDown} // Beklemedeyse butonu kilitle
                     style={{
                         width: '100%', padding: '20px',
-                        backgroundColor: '#3e2723', color: '#d2b48c', border: '3px solid #8b5a2b',
+                        // Bekleme durumuna göre renk ve gölge değişimi
+                        backgroundColor: isHookCoolingDown ? '#22150f' : '#3e2723',
+                        color: isHookCoolingDown ? '#888' : '#d2b48c',
+                        border: `3px solid ${isHookCoolingDown ? '#332014' : '#8b5a2b'}`,
                         borderRadius: '8px', fontSize: '20px', fontWeight: 'bold',
-                        cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px',
-                        boxShadow: '0 6px 10px rgba(0,0,0,0.6)',
-                        textTransform: 'uppercase', letterSpacing: '3px', transition: '0.2s'
+                        cursor: isHookCoolingDown ? 'not-allowed' : 'pointer',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px',
+                        boxShadow: isHookCoolingDown ? 'none' : '0 6px 10px rgba(0,0,0,0.6)',
+                        textTransform: 'uppercase', letterSpacing: '3px', transition: 'all 0.3s ease'
                     }}
                 >
-                    <Anchor size={28} color="#d2b48c" /> Kancayı Fırlat
+                    {isHookCoolingDown ? (
+                        <span style={{ fontSize: '18px', letterSpacing: '1px' }}>
+                            ⏳ Kanca Çekiliyor... ({cooldownTime})
+                        </span>
+                    ) : (
+                        <>
+                            <Anchor size={28} color="#d2b48c" /> Kancayı Fırlat
+                        </>
+                    )}
                 </button>
             ) : (
 
