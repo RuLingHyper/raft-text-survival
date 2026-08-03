@@ -1,52 +1,130 @@
-import React from "react";
-import { useDispatch } from "react-redux";
-import { buildNet, buildPurifier, buildGrill } from "../../store/gameSlice";
-import { Grid, Droplets, Flame } from "lucide-react";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { buildNet, buildPurifier, buildGrill, craftBandage, craftSpear, craftOar, boilWater, cookFish } from "../../store/gameSlice";
+import { Grid, Droplets, Flame, PlusSquare, Utensils, Hammer, Sword, Compass } from "lucide-react";
 
 const BuildingPanel = ({ buildings }) => {
     const dispatch = useDispatch();
+    const [category, setCategory] = useState("food");
+
+    const { inventory } = useSelector((state) => state.game);
+
+    const CategoryBtn = ({ id, icon }) => (
+        <button
+            onClick={() => setCategory(id)}
+            style={{
+                width: '50px', height: '50px',
+                backgroundColor: category === id ? '#8d6e63' : '#3e2723',
+                border: '2px solid #5c3a21', borderRadius: '4px',
+                color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}
+        >
+            {icon}
+        </button>
+    );
+
+    const CraftCard = ({ name, desc, icon, cost, onCraft, disabled, btnText }) => (
+        <div style={{ backgroundColor: "rgba(139, 90, 43, 0.2)", border: "2px solid #5c3a21", borderRadius: "6px", padding: "10px", display: "flex", gap: "15px", alignItems: "center" }}>
+            <div style={{ backgroundColor: "#3e2723", padding: "10px", borderRadius: "4px", color: '#d2b48c' }}>
+                {icon}
+            </div>
+            <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '15px' }}>{name}</div>
+                <div style={{ color: '#aaa', fontSize: '12px', marginBottom: '5px' }}>{desc}</div>
+                <div style={{ color: '#ffb142', fontSize: '11px', fontWeight: 'bold' }}>{cost}</div>
+            </div>
+            <button
+                onClick={onCraft}
+                disabled={disabled}
+                style={{ padding: '10px', backgroundColor: disabled ? '#555' : '#4cd137', color: disabled ? '#888' : '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: disabled ? 'not-allowed' : 'pointer' }}
+            >
+                {btnText || "Üret"}
+            </button>
+        </div>
+    );
 
     return (
-        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2d2d2d', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div style={{ display: 'flex', gap: '15px' }}>
 
-            {/* Ağ Kurulumu */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                    <span style={{ color: '#888', display: 'block', marginBottom: '5px', fontSize: '14px' }}>Toplama Ağları</span>
-                    <strong style={{ fontSize: '18px', color: '#2ed573' }}>{buildings.collectionNet} Adet</strong>
-                </div>
-                <button onClick={() => dispatch(buildNet())}
-                    style={{ padding: '10px 15px', backgroundColor: '#9b59b6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }} >
-                    <Grid size={16} /> Ağ Kur (3 Tahta, 3 Plastik)
-                </button>
+            {/* SOL KISIM: Kategoriler */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderRight: '2px solid #5c3a21', paddingRight: '15px' }}>
+                <CategoryBtn id="food" icon={<Utensils size={24} />} />
+                <CategoryBtn id="tools" icon={<Hammer size={24} />} />
+                <CategoryBtn id="weapons" icon={<Sword size={24} />} />
+                <CategoryBtn id="medical" icon={<PlusSquare size={24} />} />
             </div>
 
-            {/* Su Arıtıcı */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #444', paddingTop: '15px' }}>
-                <div>
-                    <span style={{ color: '#888', display: 'block', marginBottom: '5px', fontSize: '14px' }}>Su Arıtıcı</span>
-                    <strong style={{ fontSize: '16px', color: buildings.waterPurifier ? '#1e90ff' : '#555' }}>
-                        {buildings.waterPurifier ? "Aktif (Bedava Su)" : "Yok"}
-                    </strong>
-                </div>
-                <button onClick={() => dispatch(buildPurifier())} disabled={buildings.waterPurifier}
-                    style={{ padding: '10px 15px', backgroundColor: buildings.waterPurifier ? '#555' : '#1e90ff', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: buildings.waterPurifier ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }} >
-                    <Droplets size={16} /> Arıtıcı Kur (6 Plastik, 2 Metal)
-                </button>
-            </div>
+            {/* SAĞ KISIM: Seçili Kategori İçeriği */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '5px' }}>
 
-            {/* Izgara */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #444', paddingTop: '15px' }}>
-                <div>
-                    <span style={{ color: '#888', display: 'block', marginBottom: '5px', fontSize: '14px' }}>Pişirme Izgarası</span>
-                    <strong style={{ fontSize: '16px', color: buildings.grill ? '#ffa502' : '#555' }}>
-                        {buildings.grill ? "Aktif (Bedava Ateş)" : "Yok"}
-                    </strong>
-                </div>
-                <button onClick={() => dispatch(buildGrill())} disabled={buildings.grill}
-                    style={{ padding: '10px 15px', backgroundColor: buildings.grill ? '#555' : '#ffa502', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: buildings.grill ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }} >
-                    <Flame size={16} /> Izgara Kur (5 Tahta, 2 Metal)
-                </button>
+                {category === "food" && (
+                    <>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#d2b48c', fontSize: '14px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>YİYECEK & İÇECEK</h3>
+                        <CraftCard
+                            name="Su Arıtıcı" desc="Deniz suyunu içilebilir yapar." cost="6 Plastik, 2 Metal" icon={<Droplets size={24} />}
+                            disabled={buildings.waterPurifier} btnText={buildings.waterPurifier ? "Kurulu" : "Kur"}
+                            onCraft={() => dispatch(buildPurifier())}
+                        />
+                        <CraftCard
+                            name="Pişirme Izgarası" desc="Balıkları tahta harcamadan pişirir." cost="5 Tahta, 2 Metal" icon={<Flame size={24} />}
+                            disabled={buildings.grill} btnText={buildings.grill ? "Kurulu" : "Kur"}
+                            onCraft={() => dispatch(buildGrill())}
+                        />
+                        <CraftCard
+                            name="Temiz Su" desc="Susuzluğunu giderir (+25 Susuzluk)."
+                            cost={buildings.waterPurifier ? "Bedava (Arıtıcı var)" : "1 Tahta"}
+                            icon={<Droplets size={24} />}
+                            disabled={false} btnText="Kaynat"
+                            onCraft={() => dispatch(boilWater())}
+                        />
+                        <CraftCard
+                            name="Pişmiş Balık" desc="Karnını doyurur (+30 Açlık)."
+                            cost={buildings.grill ? "1 Plastik (Yem)" : "1 Tahta, 1 Plastik"}
+                            icon={<Flame size={24} />}
+                            disabled={false} btnText="Pişir"
+                            onCraft={() => dispatch(cookFish())}
+                        />
+                    </>
+                )}
+
+                {category === "tools" && (
+                    <>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#d2b48c', fontSize: '14px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>ARAÇ GEREÇLER</h3>
+                        <CraftCard
+                            name="Ahşap Kürek" desc="Açık denizlerde seyahat etmeni sağlar." cost="5 Tahta, 5 Plastik" icon={<Compass size={24} />}
+                            disabled={false} btnText="Üret"
+                            onCraft={() => dispatch(craftOar())}
+                        />
+                        <CraftCard
+                            name="Toplama Ağı" desc="Suda yüzen eşyaları otomatik yakalar." cost="3 Tahta, 3 Plastik" icon={<Grid size={24} />}
+                            disabled={false} btnText="Kur"
+                            onCraft={() => dispatch(buildNet())}
+                        />
+                    </>
+                )}
+
+                {category === "weapons" && (
+                    <>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#d2b48c', fontSize: '14px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>SİLAHLAR</h3>
+                        <CraftCard
+                            name="Tahta Mızrak" desc="Seni köpek balığı saldırılarından korur." cost="4 Tahta, 1 Metal" icon={<Sword size={24} />}
+                            disabled={false} btnText="Üret"
+                            onCraft={() => dispatch(craftSpear())}
+                        />
+                    </>
+                )}
+
+                {category === "medical" && (
+                    <>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#d2b48c', fontSize: '14px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>TIBBİ MALZEMELER</h3>
+                        <CraftCard
+                            name="Şifalı Bandaj" desc="Yaraları iyileştirir ve 25 Can verir." cost="3 Yaprak" icon={<PlusSquare size={24} />}
+                            disabled={false} btnText="Üret"
+                            onCraft={() => dispatch(craftBandage())}
+                        />
+                    </>
+                )}
+
             </div>
         </div>
     );

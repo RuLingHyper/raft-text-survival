@@ -1,47 +1,62 @@
 import React from "react";
 import { useDispatch } from "react-redux";
-import { throwHook, gatherByHand, craftHook, craftBandage, boilWater, cookFish } from "../../store/gameSlice";
-import { Anchor, Plus, Droplets, Fish } from "lucide-react";
+// Kendi gameSlice'ındaki fonksiyon isimlerinin bunlar olduğundan emin ol:
+import { throwHook, gatherByHand, craftHook } from "../../store/gameSlice";
+import { Anchor, Hand, Hammer } from "lucide-react";
 
-const ActionPanel = ({ hasHook, buildings }) => {
+const ActionPanel = ({ hasHook }) => {
     const dispatch = useDispatch();
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* Kanca Butonu ve Üretim Alanı */}
-            <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+
+            {/* EĞER KANCA VARSA: Sadece büyük fırlatma butonu görünür */}
+            {hasHook ? (
                 <button
                     onClick={() => dispatch(throwHook())}
-                    disabled={!hasHook}
-                    style={{ flex: hasHook ? '1' : '0.4', padding: '18px', backgroundColor: hasHook ? '#2ed573' : '#333', color: hasHook ? '#000' : '#555', border: 'none', borderRadius: '8px', fontSize: '18px', fontWeight: 'bold', cursor: hasHook ? 'pointer' : 'not-allowed', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}
+                    style={{
+                        width: '100%', padding: '20px',
+                        backgroundColor: '#3e2723', color: '#d2b48c', border: '3px solid #8b5a2b',
+                        borderRadius: '8px', fontSize: '20px', fontWeight: 'bold',
+                        cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px',
+                        boxShadow: '0 6px 10px rgba(0,0,0,0.6)',
+                        textTransform: 'uppercase', letterSpacing: '3px', transition: '0.2s'
+                    }}
                 >
-                    <Anchor size={24} /> {hasHook ? "Kancayı Fırlat" : "Kancan Kırıldı!"}
+                    <Anchor size={28} color="#d2b48c" /> Kancayı Fırlat
                 </button>
+            ) : (
 
-                {!hasHook && (
-                    <>
-                        <button onClick={() => dispatch(gatherByHand())} style={{ flex: '0.3', padding: '15px', backgroundColor: '#ffa502', color: '#000', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                            Denize Uzan<br />(-10 Açlık)
-                        </button>
-                        <button onClick={() => dispatch(craftHook())} style={{ flex: '0.3', padding: '15px', backgroundColor: '#0fbcf9', color: '#000', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                            Kanca Üret<br />(2T, 2P)
-                        </button>
-                    </>
-                )}
-            </div>
+                /* EĞER KANCA KIRILDIYSA / YOKSA: Kurtarma butonları görünür */
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                        onClick={() => dispatch(gatherByHand())}
+                        style={{
+                            flex: 1, padding: '15px',
+                            backgroundColor: '#2e1c14', color: '#aaa', border: '2px dashed #555',
+                            borderRadius: '8px', fontSize: '16px', fontWeight: 'bold',
+                            cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
+                            transition: '0.2s'
+                        }}
+                    >
+                        <Hand size={20} /> Elle Topla
+                    </button>
 
-            {/* Hayatta Kalma Butonları */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={() => dispatch(craftBandage())} style={{ flex: 1, padding: '15px', backgroundColor: '#ff4757', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px' }}>
-                    <Plus size={18} /> Bandaj (3 Yaprak)
-                </button>
-                <button onClick={() => dispatch(boilWater())} style={{ flex: 1, padding: '15px', backgroundColor: '#1e90ff', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', textAlign: 'center' }}>
-                    <Droplets size={18} /> {buildings.waterPurifier ? "Su İç\n(Bedava)" : "Su Kaynat\n(1 Tahta)"}
-                </button>
-                <button onClick={() => dispatch(cookFish())} style={{ flex: 1, padding: '15px', backgroundColor: '#ffa502', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', textAlign: 'center' }}>
-                    <Fish size={18} /> {buildings.grill ? "Balık Pişir\n(1 Plastik)" : "Balık Pişir\n(1T, 1P)"}
-                </button>
-            </div>
+                    <button
+                        onClick={() => dispatch(craftHook())}
+                        style={{
+                            flex: 1, padding: '15px',
+                            backgroundColor: '#8b0000', color: '#fff', border: '2px solid #ff4757',
+                            borderRadius: '8px', fontSize: '16px', fontWeight: 'bold',
+                            cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
+                            boxShadow: '0 0 15px rgba(255, 71, 87, 0.4)', transition: '0.2s'
+                        }}
+                    >
+                        <Hammer size={20} /> Yeni Kanca Üret
+                    </button>
+                </div>
+            )}
+
         </div>
     );
 };

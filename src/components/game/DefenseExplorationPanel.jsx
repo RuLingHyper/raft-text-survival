@@ -1,56 +1,57 @@
 import React from "react";
 import { useDispatch } from "react-redux";
-import { craftSpear, craftOar, exploreIsland } from "../../store/gameSlice";
-import { Sword, Compass, Map } from "lucide-react";
+import { exploreIsland } from "../../store/gameSlice";
+import { Map, ShieldAlert, ShieldCheck, Anchor } from "lucide-react";
 
 const DefenseExplorationPanel = ({ hasSpear, hasOar }) => {
     const dispatch = useDispatch();
 
     return (
-        <>
-            {/* Savunma */}
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#301b1b', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #ff4757' }}>
-                <div>
-                    <span style={{ color: '#888', display: 'block', marginBottom: '5px', fontSize: '14px' }}>Savunma</span>
-                    <strong style={{ fontSize: '20px', color: hasSpear ? '#2ed573' : '#ff4757' }}>
-                        {hasSpear ? "Mızrak Kuşanıldı" : "Savunmasız!"}
-                    </strong>
+        <div>
+            <h3 style={{ margin: '0 0 15px 0', color: '#d2b48c', fontSize: '16px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>
+                🗺️ DURUM & SEYAHAT
+            </h3>
+
+            {/* Durum Bilgi Kutuları */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                <div style={{ flex: 1, backgroundColor: "rgba(139, 90, 43, 0.2)", border: "2px solid #5c3a21", borderRadius: "6px", padding: "10px", textAlign: 'center' }}>
+                    <div style={{ color: hasOar ? '#4cd137' : '#aaa', marginBottom: '5px', display: 'flex', justifyContent: 'center' }}>
+                        <Anchor size={24} />
+                    </div>
+                    <div style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold' }}>Seyahat Durumu</div>
+                    <div style={{ color: hasOar ? '#4cd137' : '#ffb142', fontSize: '11px', marginTop: '3px' }}>
+                        {hasOar ? "Kürek Çantanda" : "Sürükleniyor..."}
+                    </div>
                 </div>
-                <button
-                    onClick={() => dispatch(craftSpear())}
-                    disabled={hasSpear}
-                    style={{ padding: '10px 15px', backgroundColor: hasSpear ? '#555' : '#ff4757', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: hasSpear ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
-                >
-                    <Sword size={16} /> Mızrak Üret (4 Tahta, 1 Metal)
-                </button>
+
+                <div style={{ flex: 1, backgroundColor: "rgba(139, 90, 43, 0.2)", border: "2px solid #5c3a21", borderRadius: "6px", padding: "10px", textAlign: 'center' }}>
+                    <div style={{ color: hasSpear ? '#4cd137' : '#ff4757', marginBottom: '5px', display: 'flex', justifyContent: 'center' }}>
+                        {hasSpear ? <ShieldCheck size={24} /> : <ShieldAlert size={24} />}
+                    </div>
+                    <div style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold' }}>Savunma</div>
+                    <div style={{ color: hasSpear ? '#4cd137' : '#ff4757', fontSize: '11px', marginTop: '3px' }}>
+                        {hasSpear ? "Mızrak Kuşanıldı" : "Savunmasız!"}
+                    </div>
+                </div>
             </div>
 
-            {/* Seyahat ve Keşif */}
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1e272e', borderRadius: '8px', border: '1px solid #0fbcf9' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <div>
-                        <span style={{ color: '#888', display: 'block', marginBottom: '5px', fontSize: '14px' }}>Seyahat Durumu</span>
-                        <strong style={{ fontSize: '20px', color: hasOar ? '#0fbcf9' : '#888' }}>
-                            {hasOar ? "Kürek Hazır" : "Sürükleniyor..."}
-                        </strong>
-                    </div>
-                    <button
-                        onClick={() => dispatch(craftOar())}
-                        disabled={hasOar}
-                        style={{ padding: '10px 15px', backgroundColor: hasOar ? '#555' : '#0fbcf9', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: hasOar ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
-                    >
-                        <Compass size={16} /> Kürek Üret (5 Tahta, 5 Plastik)
-                    </button>
+            {/* Keşif Kartı - Hero Section */}
+            <div style={{ backgroundColor: "rgba(139, 90, 43, 0.3)", border: "2px solid #5c3a21", borderRadius: "6px", padding: "15px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", textAlign: 'center' }}>
+                <Map size={36} color="#0fbcf9" />
+                <div>
+                    <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '16px' }}>Bilinmeyen Adayı Keşfet</div>
+                    <div style={{ color: '#aaa', fontSize: '12px', marginTop: '4px' }}>Adada değerli kaynaklar bulabilirsin. Ancak bu yolculuk seni çok yoracak.</div>
+                    <div style={{ color: '#ff4757', fontSize: '13px', fontWeight: 'bold', marginTop: '6px' }}>Maliyet: -25 Açlık ve Susuzluk</div>
                 </div>
                 <button
                     onClick={() => dispatch(exploreIsland())}
                     disabled={!hasOar}
-                    style={{ width: '100%', padding: '12px', backgroundColor: hasOar ? '#05c46b' : '#333', color: hasOar ? '#000' : '#555', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: hasOar ? 'pointer' : 'not-allowed', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: '0.2s' }}
+                    style={{ width: '100%', padding: '12px', backgroundColor: hasOar ? '#0fbcf9' : '#333', color: hasOar ? '#000' : '#888', border: 'none', borderRadius: '4px', fontSize: '16px', fontWeight: 'bold', cursor: hasOar ? 'pointer' : 'not-allowed', marginTop: '5px' }}
                 >
-                    <Map size={20} /> Adayı Keşfet (-25 Açlık ve Susuzluk)
+                    {hasOar ? "Küreklere Asıl ve Keşfet!" : "Önce Çantana Kürek Almalısın"}
                 </button>
             </div>
-        </>
+        </div>
     );
 };
 
