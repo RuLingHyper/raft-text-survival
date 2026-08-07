@@ -1,0 +1,5 @@
+{
+  "appId": "com.fingo.raft",
+  "appName": "Raft Survival",
+  "webDir": "dist"
+}

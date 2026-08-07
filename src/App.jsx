@@ -15,6 +15,7 @@ import DefenseExplorationPanel from "./components/game/DefenseExplorationPanel";
 import LogDisplay from "./components/game/LogDisplay";
 import ActionPanel from "./components/game/ActionPanel";
 import MerchantEvent from "./components/game/MerchantEvent";
+import FishingMiniGame from './components/game/FishingMiniGame';
 
 function App() {
   const dispatch = useDispatch();
@@ -27,7 +28,7 @@ function App() {
     return () => clearInterval(timer);
   }, [dispatch]);
 
-  const { vitals, inventory, logs, isGameStarted, isGameOver, isGameWon, buildings, equipment, isGamePaused } = useSelector((state) => state.game);
+  const { vitals, inventory, logs, isGameStarted, isGameOver, isGameWon, buildings, equipment, isGamePaused, isFishingMode } = useSelector((state) => state.game);
 
   const safeEquipment = Array.isArray(equipment) ? equipment : [];
   const hasSpear = safeEquipment.some(item => item.itemId === 'spear');
@@ -36,14 +37,25 @@ function App() {
 
   if (!isGameStarted) return <MainMenu />;
   if (isGameOver) return <GameOver />;
-  if (isGameWon) return <VictoryScreen />; // YENİ: Oyunu kazanınca Victory Screen açılır!
+  if (isGameWon) return <VictoryScreen />;
 
   return (
-    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '10px', position: 'relative' }}>
+    <div style={{
+      width: '100%',
+      minHeight: '100vh',
+      margin: 0,
+      padding: '12px',
+      backgroundColor: '#1e1e1e',
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+      position: 'relative'
+    }}>
 
       <GameHeader vitals={vitals} />
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '10px' }}>
         <button onClick={() => setOpenModal(openModal === 'inventory' ? null : 'inventory')} style={{ flex: 1, padding: '12px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
           <Backpack size={18} /> Çanta
         </button>
@@ -59,22 +71,20 @@ function App() {
       <LogDisplay logs={logs} />
       <ActionPanel hasHook={hasHook} buildings={buildings} />
 
-      {/* ========================================================= */}
       {/* SABİT, MERKEZİ VE MOBİL UYUMLU PENCERE SİSTEMİ */}
-      {/* ========================================================= */}
       {openModal !== null && (
         <div
-          onClick={() => setOpenModal(null)} // YENİ: Arka plandaki boşluğa tıklayınca menüyü otomatik kapatır
+          onClick={() => setOpenModal(null)}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)', // YENİ: Arkadaki oyunu hafif karartıp menüyü ön plana çıkarır
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
             zIndex: 100,
-            display: 'flex', justifyContent: 'center', alignItems: 'center', // YENİ: Pencereyi ekranın tam ortasına kilitler
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
             padding: '20px'
           }}
         >
           <div
-            onClick={(e) => e.stopPropagation()} // İçeriğe tıklayınca menünün yanlışlıkla kapanmasını engeller
+            onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: '#2d2d2d',
               borderRadius: '8px',
@@ -83,7 +93,7 @@ function App() {
               border: '2px solid #5c3a21',
               boxShadow: '0 10px 40px rgba(0,0,0,0.9)',
               display: 'flex', flexDirection: 'column',
-              maxHeight: '85vh' // Ekranın dışına taşmasını engeller
+              maxHeight: '85vh'
             }}
           >
 
@@ -117,6 +127,7 @@ function App() {
         </div>
       )}
 
+      {isFishingMode && <FishingMiniGame />}
       {isGamePaused && <PauseMenu />}
     </div>
   );

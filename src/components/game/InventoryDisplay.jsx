@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { useBandage, drinkWater, eatFood, dropItem, swapInventorySlots } from "../../store/gameSlice";
-// YENİ İKONLAR EKLENDİ (Cpu, Battery, Radio)
-import { TreePine, Box, Leaf, Wrench, PlusSquare, Droplets, Utensils, Trash2, CheckCircle, Cpu, Battery, Radio } from "lucide-react";
+import { useBandage, drinkWater, eatFood, dropItem, swapInventorySlots, fillCup, startPurifying, startFishingMode, startCooking } from "../../store/gameSlice";
+import { TreePine, Box, Leaf, Wrench, PlusSquare, Droplets, Utensils, Trash2, CheckCircle, Cpu, Battery, Radio, Fish, Coffee, Waves } from "lucide-react";
 
 // ==========================================
 // SABİT EŞYA ÖZELLİKLERİ (METADATA SÖZLÜĞÜ)
@@ -12,11 +11,15 @@ const ITEM_META = {
     plastic: { name: "Plastik", max: 50, icon: <Box size={24} /> },
     leaf: { name: "Yaprak", max: 50, icon: <Leaf size={24} /> },
     metal: { name: "Metal", max: 50, icon: <Wrench size={24} /> },
-    water: { name: "Temiz Su", max: 20, icon: <Droplets size={24} />, isUsable: true, action: drinkWater },
-    food: { name: "Pişmiş Balık", max: 20, icon: <Utensils size={24} />, isUsable: true, action: eatFood },
     bandage: { name: "Bandaj", max: 10, icon: <PlusSquare size={24} />, isUsable: true, action: useBandage },
 
-    // YENİ: NADİR EŞYALAR (Özel renklerle)
+    water: { name: "Temiz Su", max: 20, icon: <Droplets size={24} />, isUsable: true, action: drinkWater },
+    food: { name: "Pişmiş Balık", max: 20, icon: <Utensils size={24} />, isUsable: true, action: eatFood },
+    fishing_rod: { name: "Olta", max: 1, icon: <Fish size={24} color="#ffb142" />, isUsable: true, action: startFishingMode },
+    empty_cup: { name: "Boş Bardak", max: 1, icon: <Coffee size={24} color="#d2dae2" />, isUsable: true, action: fillCup },
+    salt_water: { name: "Tuzlu Su", max: 1, icon: <Waves size={24} color="#34ace0" />, isUsable: true, action: startPurifying },
+    raw_fish: { name: "Çiğ Balık", max: 10, icon: <Fish size={24} color="#ff5252" />, isUsable: true, action: startCooking },
+
     circuit_board: { name: "Devre Kartı", max: 1, icon: <Cpu size={24} color="#00d8d6" /> },
     military_battery: { name: "Askeri Batarya", max: 1, icon: <Battery size={24} color="#ffdd59" /> },
     signal_antenna: { name: "Sinyal Anteni", max: 1, icon: <Radio size={24} color="#ff3f34" /> },
@@ -139,7 +142,7 @@ const InventoryDisplay = ({ inventory }) => {
                             boxShadow: '0 10px 40px rgba(0,0,0,0.9)'
                         }}
                     >
-                        {/* Başlık */}
+                        {/* 1. BAŞLIK */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '2px solid #5c3a21', paddingBottom: '15px', marginBottom: '5px' }}>
                             <div style={{ color: activeActionMenu.item.isUsable ? '#ff4757' : '#d2b48c' }}>
                                 {activeActionMenu.item.icon}
@@ -150,9 +153,36 @@ const InventoryDisplay = ({ inventory }) => {
                             </div>
                         </div>
 
-                        {/* MİKTAR SEÇİCİ (Eğer eşya 1'den fazlaysa görünür) */}
+                        {/* 2. KULLAN BUTONU (EN ÜSTE ALINDI) */}
+                        {activeActionMenu.item.isUsable && (
+                            <button
+                                onClick={() => {
+                                    dispatch(activeActionMenu.item.action());
+                                    if (activeActionMenu.item.count <= 1) setActiveActionMenu(null);
+                                    else {
+                                        setActiveActionMenu(prev => ({ ...prev, item: { ...prev.item, count: prev.item.count - 1 } }));
+                                        setDropAmount(prev => Math.min(prev, activeActionMenu.item.count - 1));
+                                    }
+                                }}
+                                style={{ padding: '12px', backgroundColor: '#4cd137', color: '#111', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                            >
+                                <CheckCircle size={18} /> 1 ADET KULLAN
+                            </button>
+                        )}
+
+                        {/* 3. MİKTAR SEÇİCİ (YERE AT BUTONUNUN ÜSTÜNE ALINDI) */}
                         {activeActionMenu.item.count > 1 && (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1e1e1e', padding: '10px', borderRadius: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1e1e1e', padding: '10px', borderRadius: '6px', marginTop: '10px' }}>
+
+                                {/* YENİ: MIN BUTONU (Sola eklendi) */}
+                                <button
+                                    onClick={() => setDropAmount(1)}
+                                    style={{ padding: '8px 12px', backgroundColor: '#8b0000', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                                >
+                                    MIN
+                                </button>
+
+                                {/* ORTA KISIM: - SAYI + */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                     <button
                                         onClick={() => setDropAmount(prev => Math.max(1, prev - 1))}
@@ -169,6 +199,7 @@ const InventoryDisplay = ({ inventory }) => {
                                     >+</button>
                                 </div>
 
+                                {/* SAĞ KISIM: MAX BUTONU */}
                                 <button
                                     onClick={() => setDropAmount(activeActionMenu.item.count)}
                                     style={{ padding: '8px 12px', backgroundColor: '#8b0000', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
@@ -178,35 +209,16 @@ const InventoryDisplay = ({ inventory }) => {
                             </div>
                         )}
 
-                        {/* KULLAN BUTONU */}
-                        {activeActionMenu.item.isUsable && (
-                            <button
-                                onClick={() => {
-                                    dispatch(activeActionMenu.item.action());
-                                    if (activeActionMenu.item.count <= 1) setActiveActionMenu(null);
-                                    else {
-                                        setActiveActionMenu(prev => ({ ...prev, item: { ...prev.item, count: prev.item.count - 1 } }));
-                                        // Eğer miktar seçici mevcut sayıdan büyük kaldıysa onu da düzelt
-                                        setDropAmount(prev => Math.min(prev, activeActionMenu.item.count - 1));
-                                    }
-                                }}
-                                style={{ padding: '12px', backgroundColor: '#4cd137', color: '#111', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-                            >
-                                <CheckCircle size={18} /> 1 ADET KULLAN
-                            </button>
-                        )}
-
-                        {/* YERE AT BUTONU (Dinamik Yazı) */}
+                        {/* 4. YERE AT BUTONU */}
                         <button
                             onClick={() => {
                                 dispatch(dropItem({ slotIndex: activeActionMenu.index, itemName: activeActionMenu.item.name, amount: dropAmount }));
 
                                 if (dropAmount >= activeActionMenu.item.count) {
-                                    setActiveActionMenu(null); // Hepsini attıysak menüyü kapat
+                                    setActiveActionMenu(null);
                                 } else {
-                                    // Bir kısmını attıysak menüyü güncelle
                                     setActiveActionMenu(prev => ({ ...prev, item: { ...prev.item, count: prev.item.count - dropAmount } }));
-                                    setDropAmount(1); // Seçiciyi tekrar 1'e sıfırla
+                                    setDropAmount(1);
                                 }
                             }}
                             style={{ padding: '12px', backgroundColor: '#e84118', color: '#fff', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
@@ -214,6 +226,7 @@ const InventoryDisplay = ({ inventory }) => {
                             <Trash2 size={18} /> {dropAmount === activeActionMenu.item.count ? "HEPSİNİ YERE AT" : `${dropAmount} ADET YERE AT`}
                         </button>
 
+                        {/* 5. İPTAL BUTONU */}
                         <button
                             onClick={() => setActiveActionMenu(null)}
                             style={{ padding: '12px', backgroundColor: 'transparent', color: '#aaa', border: '2px solid #555', borderRadius: '5px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', marginTop: '5px' }}
