@@ -4,7 +4,7 @@ import { debugGiveAllItems, buildNet, buildPurifier, buildGrill, craftBandage, c
 import { Grid, Droplets, Flame, PlusSquare, Utensils, Hammer, Sword, Compass, Radio, Fish, Coffee } from "lucide-react";
 
 // ==========================================
-// ALT BİLEŞENLER (PERFORMANS İÇİN DIŞARI ALINDI)
+// ALT BİLEŞENLER
 // ==========================================
 const CategoryBtn = ({ id, icon, currentCategory, setCategory }) => (
     <button
@@ -48,7 +48,7 @@ const BuildingPanel = ({ buildings }) => {
     const [category, setCategory] = useState("food");
 
     return (
-        <div style={{ display: 'flex', gap: '15px' }}>
+        <div style={{ display: 'flex', gap: '15px', minHeight: '420px' }}>
 
             {/* SOL KISIM: Kategoriler */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderRight: '2px solid #5c3a21', paddingRight: '15px' }}>
@@ -57,7 +57,7 @@ const BuildingPanel = ({ buildings }) => {
                 <CategoryBtn id="weapons" icon={<Sword size={24} />} currentCategory={category} setCategory={setCategory} />
                 <CategoryBtn id="medical" icon={<PlusSquare size={24} />} currentCategory={category} setCategory={setCategory} />
 
-                {/* TEST BUTONU (Sonra silinecek) */}
+                {/* TEST BUTONU */}
                 <button
                     onClick={() => dispatch(debugGiveAllItems())}
                     style={{ marginTop: '20px', padding: '10px', backgroundColor: 'purple', color: 'white', border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}
