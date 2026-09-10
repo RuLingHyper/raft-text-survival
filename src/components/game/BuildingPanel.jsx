@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { debugGiveAllItems, buildNet, buildPurifier, buildGrill, craftBandage, craftSpear, craftOar, boilWater, cookFish, buildSOS } from "../../store/gameSlice";
-import { Grid, Droplets, Flame, PlusSquare, Utensils, Hammer, Sword, Compass, Radio } from "lucide-react";
+import { debugGiveAllItems, buildNet, buildPurifier, buildGrill, craftBandage, craftSpear, craftOar, buildSOS, craftFishingRod, craftEmptyCup } from "../../store/gameSlice";
+import { Grid, Droplets, Flame, PlusSquare, Utensils, Hammer, Sword, Compass, Radio, Fish, Coffee } from "lucide-react";
 
 // ==========================================
-// ALT BİLEŞENLER (PERFORMANS İÇİN DIŞARI ALINDI)
+// ALT BİLEŞENLER
 // ==========================================
 const CategoryBtn = ({ id, icon, currentCategory, setCategory }) => (
     <button
@@ -48,7 +48,7 @@ const BuildingPanel = ({ buildings }) => {
     const [category, setCategory] = useState("food");
 
     return (
-        <div style={{ display: 'flex', gap: '15px' }}>
+        <div style={{ display: 'flex', gap: '15px', minHeight: '420px' }}>
 
             {/* SOL KISIM: Kategoriler */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderRight: '2px solid #5c3a21', paddingRight: '15px' }}>
@@ -57,7 +57,7 @@ const BuildingPanel = ({ buildings }) => {
                 <CategoryBtn id="weapons" icon={<Sword size={24} />} currentCategory={category} setCategory={setCategory} />
                 <CategoryBtn id="medical" icon={<PlusSquare size={24} />} currentCategory={category} setCategory={setCategory} />
 
-                {/* TEST BUTONU (Sonra silinecek) */}
+                {/* TEST BUTONU */}
                 <button
                     onClick={() => dispatch(debugGiveAllItems())}
                     style={{ marginTop: '20px', padding: '10px', backgroundColor: 'purple', color: 'white', border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}
@@ -72,6 +72,7 @@ const BuildingPanel = ({ buildings }) => {
                 {category === "food" && (
                     <>
                         <h3 style={{ margin: '0 0 10px 0', color: '#d2b48c', fontSize: '14px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>YİYECEK & İÇECEK</h3>
+
                         <CraftCard
                             name="Su Arıtıcı" desc="Deniz suyunu içilebilir yapar." cost="6 Plastik, 2 Metal" icon={<Droplets size={24} />}
                             disabled={buildings.waterPurifier} btnText={buildings.waterPurifier ? "Kurulu" : "Kur"}
@@ -82,20 +83,6 @@ const BuildingPanel = ({ buildings }) => {
                             disabled={buildings.grill} btnText={buildings.grill ? "Kurulu" : "Kur"}
                             onCraft={() => dispatch(buildGrill())}
                         />
-                        <CraftCard
-                            name="Temiz Su" desc="Susuzluğunu giderir (+25 Susuzluk)."
-                            cost={buildings.waterPurifier ? "Bedava (Arıtıcı var)" : "1 Tahta"}
-                            icon={<Droplets size={24} />}
-                            disabled={false} btnText="Kaynat"
-                            onCraft={() => dispatch(boilWater())}
-                        />
-                        <CraftCard
-                            name="Pişmiş Balık" desc="Karnını doyurur (+30 Açlık)."
-                            cost={buildings.grill ? "1 Plastik (Yem)" : "1 Tahta, 1 Plastik"}
-                            icon={<Flame size={24} />}
-                            disabled={false} btnText="Pişir"
-                            onCraft={() => dispatch(cookFish())}
-                        />
                     </>
                 )}
 
@@ -103,6 +90,16 @@ const BuildingPanel = ({ buildings }) => {
                     <>
                         <h3 style={{ margin: '0 0 10px 0', color: '#d2b48c', fontSize: '14px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>ARAÇ GEREÇLER</h3>
 
+                        <CraftCard
+                            name="Olta" desc="Denizden balık tutmanı sağlar." cost="4 Tahta, 2 Plastik" icon={<Fish size={24} />}
+                            disabled={false} btnText="Üret"
+                            onCraft={() => dispatch(craftFishingRod())}
+                        />
+                        <CraftCard
+                            name="Boş Bardak" desc="Denizden su doldurmak için." cost="2 Plastik" icon={<Coffee size={24} />}
+                            disabled={false} btnText="Üret"
+                            onCraft={() => dispatch(craftEmptyCup())}
+                        />
                         <CraftCard
                             name="Ahşap Kürek" desc="Açık denizlerde seyahat etmeni sağlar." cost="5 Tahta, 5 Plastik" icon={<Compass size={24} />}
                             disabled={false} btnText="Üret"
@@ -114,7 +111,6 @@ const BuildingPanel = ({ buildings }) => {
                             onCraft={() => dispatch(buildNet())}
                         />
 
-                        {/* YENİ: S.O.S İstasyonu Eklendi */}
                         <CraftCard
                             name="S.O.S İstasyonu" desc="Helikopteri çağırır ve oyunu bitirir!"
                             cost="1 Kart, 1 Batarya, 1 Anten, 15 Metal, 20 Plastik" icon={<Radio size={24} color="#ff3f34" />}

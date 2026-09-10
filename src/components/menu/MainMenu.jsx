@@ -30,7 +30,8 @@ const MainMenu = () => {
     return (
         <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            minHeight: '100vh', backgroundColor: '#111', padding: '15px', position: 'relative'
+            height: '100vh', width: '100vw', backgroundColor: '#111', padding: '15px', position: 'relative',
+            overflow: 'hidden', boxSizing: 'border-box'
         }}>
 
             {/* ANA MENÜ KUTUSU */}
@@ -104,10 +105,6 @@ const MainMenu = () => {
 
                 <div style={{ marginTop: '25px', borderTop: '1px solid #5c3a21', paddingTop: '15px' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', fontSize: '13px' }}>
-
-                        <a href="#https://www.fingodrive.com" target="_blank" rel="noopener noreferrer" style={{ color: '#d2b48c', cursor: 'pointer', textDecoration: 'underline' }}>
-                            Fingo Drive
-                        </a>
 
                         <a href="https://github.com/RuLingHyper" target="_blank" rel="noopener noreferrer" style={{ color: '#d2b48c', cursor: 'pointer', textDecoration: 'underline' }}>
                             GitHub
