@@ -16,6 +16,17 @@ const loadState = () => {
         if (parsedState && parsedState.game) {
             parsedState.game.isGameStarted = false;
             parsedState.game.isGamePaused = false;
+            parsedState.game.isFishingMode = false;
+            if (!parsedState.game.buildings) {
+                parsedState.game.buildings = { collectionNet: 0, waterPurifier: false, grill: false };
+            }
+            if (typeof parsedState.game.sharkCooldown !== 'number') {
+                parsedState.game.sharkCooldown = 40;
+            }
+            if (typeof parsedState.game.grillTimer !== 'number') parsedState.game.grillTimer = 0;
+            if (typeof parsedState.game.purifierTimer !== 'number') parsedState.game.purifierTimer = 0;
+            if (typeof parsedState.game.isGrillActive !== 'boolean') parsedState.game.isGrillActive = false;
+            if (typeof parsedState.game.isPurifierActive !== 'boolean') parsedState.game.isPurifierActive = false;
         }
 
         return parsedState;

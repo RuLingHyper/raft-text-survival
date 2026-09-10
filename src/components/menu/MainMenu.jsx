@@ -5,14 +5,18 @@ import { Play, Plus, Settings, Info, AlertTriangle, X, Check, Code, Globe, Volum
 
 const MainMenu = () => {
     const dispatch = useDispatch();
-    const { logs, inventory, vitals } = useSelector((state) => state.game);
+    const { logs, inventory, vitals, day, tickCount } = useSelector((state) => state.game);
 
     // Açılır pencerelerin (modal) durumlarını tutan state'ler
     const [showConfirm, setShowConfirm] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showDevelopers, setShowDevelopers] = useState(false);
 
-    const hasSave = logs.length > 1 || inventory.wood > 0 || vitals.health < 100;
+    const hasSave = (Array.isArray(logs) && logs.length > 1) ||
+        (Array.isArray(inventory) && inventory.some(slot => slot !== null)) ||
+        (vitals && vitals.health < 100) ||
+        (typeof day === 'number' && day > 1) ||
+        (typeof tickCount === 'number' && tickCount > 0);
 
     const handleNewGame = () => {
         if (hasSave) {

@@ -42,28 +42,31 @@ function App() {
   return (
     <div style={{
       width: '100%',
-      minHeight: '100vh',
-      margin: 0,
-      padding: '12px',
+      maxWidth: '460px',
+      height: '100dvh',
+      maxHeight: '100dvh',
+      margin: '0 auto',
+      padding: '10px',
       backgroundColor: '#1e1e1e',
       boxSizing: 'border-box',
       display: 'flex',
       flexDirection: 'column',
-      gap: '10px',
-      position: 'relative'
+      gap: '8px',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
 
       <GameHeader vitals={vitals} />
 
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <button onClick={() => setOpenModal(openModal === 'inventory' ? null : 'inventory')} style={{ flex: 1, padding: '12px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
-          <Backpack size={18} /> Çanta
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button onClick={() => setOpenModal(openModal === 'inventory' ? null : 'inventory')} style={{ flex: 1, padding: '10px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
+          <Backpack size={16} /> Çanta
         </button>
-        <button onClick={() => setOpenModal(openModal === 'building' ? null : 'building')} style={{ flex: 1, padding: '12px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
-          <Hammer size={18} /> Üretim
+        <button onClick={() => setOpenModal(openModal === 'building' ? null : 'building')} style={{ flex: 1, padding: '10px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
+          <Hammer size={16} /> Üretim
         </button>
-        <button onClick={() => setOpenModal(openModal === 'exploration' ? null : 'exploration')} style={{ flex: 1, padding: '12px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
-          <Map size={18} /> Keşif
+        <button onClick={() => setOpenModal(openModal === 'exploration' ? null : 'exploration')} style={{ flex: 1, padding: '10px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
+          <Map size={16} /> Keşif
         </button>
       </div>
 
@@ -93,7 +96,9 @@ function App() {
               border: '2px solid #5c3a21',
               boxShadow: '0 10px 40px rgba(0,0,0,0.9)',
               display: 'flex', flexDirection: 'column',
-              maxHeight: '85vh'
+              maxHeight: '85vh',
+              height: openModal === 'building' ? '510px' : undefined,
+              overflow: 'hidden'
             }}
           >
 
@@ -102,7 +107,8 @@ function App() {
               backgroundColor: '#3e2723', padding: '15px',
               borderTopLeftRadius: '6px', borderTopRightRadius: '6px',
               borderBottom: '2px solid #5c3a21',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              flexShrink: 0
             }}
             >
               <span style={{ color: '#d2b48c', fontWeight: 'bold', fontSize: '15px', letterSpacing: '1px' }}>
@@ -117,7 +123,14 @@ function App() {
             </div>
 
             {/* PENCERE İÇERİĞİ */}
-            <div style={{ padding: '15px', overflowY: 'auto' }}>
+            <div style={{
+              padding: openModal === 'building' ? '15px 10px 15px 15px' : '15px',
+              overflowY: openModal === 'building' ? 'hidden' : 'auto',
+              flex: 1,
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
               {openModal === 'inventory' && <InventoryDisplay inventory={inventory} />}
               {openModal === 'building' && <BuildingPanel buildings={buildings} />}
               {openModal === 'exploration' && <DefenseExplorationPanel hasOar={hasOar} hasSpear={hasSpear} />}

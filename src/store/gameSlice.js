@@ -11,7 +11,7 @@ const STACK_LIMITS = {
     wood: 50, plastic: 50, leaf: 50, metal: 50,
     water: 20, food: 20, bandage: 10,
     circuit_board: 1, military_battery: 1, signal_antenna: 1,
-    fishing_rod: 1, empty_cup: 1, salt_water: 1, raw_fish: 10
+    fishing_rod: 1, empty_cup: 5, salt_water: 5, raw_fish: 10
 };
 
 const INVENTORY_SIZE = 15;
@@ -98,7 +98,7 @@ const initialState = {
 
     isGameOver: false,
     isGameWon: false,
-    isGameStarted: true,
+    isGameStarted: false,
     isGamePaused: false,
 };
 
@@ -231,7 +231,7 @@ export const gameSlice = createSlice({
         },
 
         gameTick: (state) => {
-            if (!state.isGameStarted || state.isGameOver || state.isGamePaused || state.isGameWon) return;
+            if (!state.isGameStarted || state.isGameOver || state.isGamePaused || state.isGameWon || state.isFishingMode) return;
 
             if (!state.merchant) {
                 state.merchant = { active: false, timer: 0, offer: { costItem: '', costCount: 0, rewardItem: '', rewardCount: 0 } };
@@ -387,7 +387,8 @@ export const gameSlice = createSlice({
                     if (addItem(state, 'water', 1)) {
                         state.logs.unshift("💧 DING! Suyun arıtıldı, kana kana içmeye hazır.");
                     } else {
-                        state.logs.unshift("💧 Su arıtıldı ama çantanda yer olmadığı için döküldü!");
+                        addItem(state, 'empty_cup', 1);
+                        state.logs.unshift("💧 Su arıtıldı ama çantanda yer olmadığı için döküldü! Boş bardağın geri alındı.");
                     }
                 }
             }
@@ -414,15 +415,16 @@ export const gameSlice = createSlice({
         },
 
         craftEmptyCup: (state) => {
-            const hasAnyCup = state.inventory.some(item => item && ['empty_cup', 'salt_water', 'water'].includes(item.itemId));
-            if (!hasAnyCup && hasEnough(state, 'plastic', 2)) {
-                removeItems(state, 'plastic', 2);
-                addItem(state, 'empty_cup', 1);
-                state.logs.unshift("🥤 Boş Bardak ürettin! Denizden su doldurabilirsin.");
-            } else if (hasAnyCup) {
-                state.logs.unshift("Zaten bir bardağın veya suyun var!");
+            const costPlastic = 2;
+            if (hasEnough(state, 'plastic', costPlastic)) {
+                if (addItem(state, 'empty_cup', 1)) {
+                    removeItems(state, 'plastic', costPlastic);
+                    state.logs.unshift("🥤 Boş Bardak ürettin! Denizden su doldurabilirsin.");
+                } else {
+                    state.logs.unshift("Çantanda daha fazla boş bardak için yer yok!");
+                }
             } else {
-                state.logs.unshift("Boş bardak için 2 Plastik gerekli!");
+                state.logs.unshift(`Boş bardak için ${costPlastic} Plastik gerekli!`);
             }
         },
 
@@ -498,7 +500,7 @@ export const gameSlice = createSlice({
                 state.logs.unshift("💨 Balık kaçtı! Zamanlamayı tutturamadın.");
             }
 
-            if (Math.random() * 100 < 20) {
+            if (Math.random() * 100 < 5) {
                 removeItems(state, 'fishing_rod', 1);
                 state.logs.unshift("💥 Oltan kırıldı! Yenisini yapman gerekecek.");
             }
@@ -574,31 +576,35 @@ export const gameSlice = createSlice({
             state.equipment[oarIndex].durability -= 10;
             const isOarBroken = state.equipment[oarIndex].durability <= 0;
 
-            const rareChance = Math.floor(Math.random() * 100);
+            const hasCircuit = state.inventory.some(item => item && item.itemId === 'circuit_board');
+            const hasBattery = state.inventory.some(item => item && item.itemId === 'military_battery');
+            const hasAntenna = state.inventory.some(item => item && item.itemId === 'signal_antenna');
 
-            if (rareChance === 0) {
-                if (addItem(state, 'circuit_board')) {
-                    state.logs.unshift("🌟 İNANILMAZ! Terk edilmiş bir kulübede sağlam bir 'Devre Kartı' buldun!");
+            const missingRares = [];
+            if (!hasCircuit) missingRares.push({ id: 'circuit_board', name: 'Devre Kartı', desc: 'Terk edilmiş bir kulübede sağlam bir' });
+            if (!hasBattery) missingRares.push({ id: 'military_battery', name: 'Askeri Batarya', desc: 'Eski bir sığınakta dolu bir' });
+            if (!hasAntenna) missingRares.push({ id: 'signal_antenna', name: 'Sinyal Anteni', desc: 'Kumların arasına gömülü paslanmaz bir' });
+
+            const findRareRoll = Math.floor(Math.random() * 100);
+
+            if (missingRares.length > 0 && findRareRoll < 25) {
+                const chosen = missingRares[Math.floor(Math.random() * missingRares.length)];
+                if (addItem(state, chosen.id)) {
+                    state.logs.unshift(`🌟 İNANILMAZ! ${chosen.desc} '${chosen.name}' buldun!`);
                 } else {
-                    state.logs.unshift("🌟 Devre Kartı buldun ama çantanda yer olmadığı için alamadın!");
-                }
-            } else if (rareChance === 1) {
-                if (addItem(state, 'military_battery')) {
-                    state.logs.unshift("🌟 İNANILMAZ! Eski bir sığınakta dolu bir 'Askeri Batarya' buldun!");
-                } else {
-                    state.logs.unshift("🌟 Askeri Batarya buldun ama çantanda yer olmadığı için alamadın!");
-                }
-            } else if (rareChance === 2) {
-                if (addItem(state, 'signal_antenna')) {
-                    state.logs.unshift("🌟 İNANILMAZ! Kumların arasına gömülü paslanmaz bir 'Sinyal Anteni' buldun!");
-                } else {
-                    state.logs.unshift("🌟 Sinyal Anteni buldun ama çantanda yer olmadığı için alamadın!");
+                    state.logs.unshift(`🌟 ${chosen.name} buldun ama çantanda yer olmadığı için alamadın!`);
                 }
             } else {
-                addItem(state, 'wood', 8);
-                addItem(state, 'leaf', 4);
-                addItem(state, 'metal', 1);
-                state.logs.unshift("Bir adaya çıktın! Terk edilmiş bir kamp buldun. (Standart malzemeler topladın)");
+                let gathered = [];
+                if (addItem(state, 'wood', 8)) gathered.push('8 Tahta');
+                if (addItem(state, 'leaf', 4)) gathered.push('4 Yaprak');
+                if (addItem(state, 'metal', 1)) gathered.push('1 Metal');
+
+                if (gathered.length > 0) {
+                    state.logs.unshift(`Bir adaya çıktın! Terk edilmiş bir kamp buldun: ${gathered.join(', ')} topladın.`);
+                } else {
+                    state.logs.unshift("Bir adaya çıktın ama çantan ağzına kadar dolu olduğu için malzemeleri alamadın!");
+                }
             }
 
             if (isOarBroken) {

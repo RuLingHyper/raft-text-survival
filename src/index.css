@@ -1,20 +1,62 @@
 html,
-body {
-  background-color: #121212;
+body,
+#root {
+  background-color: #0f0f0f;
   color: #ffffff;
   font-family: sans-serif;
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-
   overscroll-behavior: none;
-  /* Sayfanın sonuna gelince lastik gibi sekmesini (bounce) engeller */
   overflow: hidden;
-  /* Ana gövdenin aşağı/yukarı kaymasını tamamen kapatır */
   -webkit-user-select: none;
-  /* Yazıların üzerine basılı tutunca seçilmesini (mavi olmasını) engeller */
   user-select: none;
   -webkit-touch-callout: none;
-  /* Mobilde uzun basınca çıkan "Kopyala/Paylaş" menülerini engeller */
+}
+
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+
+@keyframes floatPulse {
+  0% {
+    transform: translateY(0px) scale(1);
+    box-shadow: 0 4px 15px rgba(253, 203, 110, 0.4);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 6px 20px rgba(253, 203, 110, 0.7);
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    box-shadow: 0 4px 15px rgba(253, 203, 110, 0.4);
+  }
+}
+
+/* Raft temalı özel kaydırma çubuğu (scrollbar) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #5c3a21 rgba(45, 45, 45, 0.5);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(30, 30, 30, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #5c3a21;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5a2b;
 }

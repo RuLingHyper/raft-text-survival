@@ -34,7 +34,7 @@ const ActionPanel = ({ hasHook }) => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
             {/* EĞER KANCA VARSA: Sadece büyük fırlatma butonu görünür */}
             {hasHook ? (
@@ -42,25 +42,25 @@ const ActionPanel = ({ hasHook }) => {
                     onClick={handleThrowHook}
                     disabled={isHookCoolingDown} // Beklemedeyse butonu kilitle
                     style={{
-                        width: '100%', padding: '20px',
+                        width: '100%', padding: '14px 16px',
                         // Bekleme durumuna göre renk ve gölge değişimi
                         backgroundColor: isHookCoolingDown ? '#22150f' : '#3e2723',
                         color: isHookCoolingDown ? '#888' : '#d2b48c',
                         border: `3px solid ${isHookCoolingDown ? '#332014' : '#8b5a2b'}`,
-                        borderRadius: '8px', fontSize: '20px', fontWeight: 'bold',
+                        borderRadius: '8px', fontSize: '18px', fontWeight: 'bold',
                         cursor: isHookCoolingDown ? 'not-allowed' : 'pointer',
                         display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px',
-                        boxShadow: isHookCoolingDown ? 'none' : '0 6px 10px rgba(0,0,0,0.6)',
-                        textTransform: 'uppercase', letterSpacing: '3px', transition: 'all 0.3s ease'
+                        boxShadow: isHookCoolingDown ? 'none' : '0 4px 8px rgba(0,0,0,0.6)',
+                        textTransform: 'uppercase', letterSpacing: '2px', transition: 'all 0.3s ease'
                     }}
                 >
                     {isHookCoolingDown ? (
-                        <span style={{ fontSize: '18px', letterSpacing: '1px' }}>
+                        <span style={{ fontSize: '16px', letterSpacing: '1px' }}>
                             ⏳ Kanca Çekiliyor... ({cooldownTime})
                         </span>
                     ) : (
                         <>
-                            <Anchor size={28} color="#d2b48c" /> Kancayı Fırlat
+                            <Anchor size={24} color="#d2b48c" /> Kancayı Fırlat
                         </>
                     )}
                 </button>
