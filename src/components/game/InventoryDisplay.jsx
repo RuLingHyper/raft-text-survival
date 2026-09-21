@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useBandage, drinkWater, eatFood, dropItem, swapInventorySlots, fillCup, startPurifying, startFishingMode, startCooking } from "../../store/gameSlice";
-import { TreePine, Box, Leaf, Wrench, PlusSquare, Droplets, Utensils, Trash2, CheckCircle, Cpu, Battery, Radio, Fish, Coffee, Waves } from "lucide-react";
+import { TreePine, Box, Leaf, Wrench, PlusSquare, Droplets, Utensils, Trash2, CheckCircle, Cpu, Battery, Radio, Fish, Coffee, Waves, Anchor, Sword, Compass } from "lucide-react";
 
 // ==========================================
 // SABİT EŞYA ÖZELLİKLERİ (METADATA SÖZLÜĞÜ)
@@ -16,8 +16,8 @@ const ITEM_META = {
     water: { name: "Temiz Su", max: 20, icon: <Droplets size={24} />, isUsable: true, action: drinkWater },
     food: { name: "Pişmiş Balık", max: 20, icon: <Utensils size={24} />, isUsable: true, action: eatFood },
     fishing_rod: { name: "Olta", max: 1, icon: <Fish size={24} color="#ffb142" />, isUsable: true, action: startFishingMode },
-    empty_cup: { name: "Boş Bardak", max: 1, icon: <Coffee size={24} color="#d2dae2" />, isUsable: true, action: fillCup },
-    salt_water: { name: "Tuzlu Su", max: 1, icon: <Waves size={24} color="#34ace0" />, isUsable: true, action: startPurifying },
+    empty_cup: { name: "Boş Bardak", max: 5, icon: <Coffee size={24} color="#d2dae2" />, isUsable: true, action: fillCup },
+    salt_water: { name: "Tuzlu Su", max: 5, icon: <Waves size={24} color="#34ace0" />, isUsable: true, action: startPurifying },
     raw_fish: { name: "Çiğ Balık", max: 10, icon: <Fish size={24} color="#ff5252" />, isUsable: true, action: startCooking },
 
     circuit_board: { name: "Devre Kartı", max: 1, icon: <Cpu size={24} color="#00d8d6" /> },
@@ -28,7 +28,7 @@ const ITEM_META = {
 // ==========================================
 // SÜRÜKLENEBİLİR KUTU (SLOT) BİLEŞENİ
 // ==========================================
-const InventorySlot = ({ item, index, onDragStart, onDrop, onDragOver, onSlotClick }) => {
+const InventorySlot = ({ item, index, isSelected, onDragStart, onDrop, onDragOver, onSlotClick }) => {
     const isEmpty = !item;
     const hasItem = !isEmpty && item.count > 0;
 
@@ -38,17 +38,17 @@ const InventorySlot = ({ item, index, onDragStart, onDrop, onDragOver, onSlotCli
             onDragStart={(e) => onDragStart(e, index)}
             onDragOver={onDragOver}
             onDrop={(e) => onDrop(e, index)}
-            onClick={() => {
-                if (hasItem) onSlotClick(index, item);
-            }}
+            onClick={() => onSlotClick(index, item)}
             style={{
-                backgroundColor: "rgba(139, 90, 43, 0.4)", border: "2px solid #5c3a21", borderRadius: "6px",
+                backgroundColor: isSelected ? "rgba(253, 203, 110, 0.4)" : "rgba(139, 90, 43, 0.4)",
+                border: isSelected ? "2px solid #fdcb6e" : "2px solid #5c3a21",
+                borderRadius: "6px",
                 aspectRatio: "1", position: "relative", display: "flex", flexDirection: "column",
                 alignItems: "center", justifyContent: "center",
-                cursor: hasItem ? "pointer" : "default",
+                cursor: "pointer",
                 color: "white", transition: "0.2s",
-                boxShadow: item?.isUsable && hasItem ? "0 0 8px rgba(255, 71, 87, 0.5)" : "none",
-                opacity: hasItem ? 1 : 0.2
+                boxShadow: isSelected ? "0 0 12px rgba(253, 203, 110, 0.8)" : item?.isUsable && hasItem ? "0 0 8px rgba(255, 71, 87, 0.5)" : "none",
+                opacity: hasItem ? 1 : isSelected ? 0.8 : 0.25
             }}
         >
             {hasItem && (
@@ -56,7 +56,7 @@ const InventorySlot = ({ item, index, onDragStart, onDrop, onDragOver, onSlotCli
                     {/* Sol Üst: Eşya İsmi */}
                     <div style={{ position: "absolute", top: "4px", left: "4px", fontSize: "10px", color: "#ddd", fontWeight: "bold", pointerEvents: 'none' }}>{item.name}</div>
 
-                    {/* YENİ - Sağ Üst: Kullanılabilir Etiketi (Çöp kutusunun eski yerine aldık ve şıklaştırdık) */}
+                    {/* Sağ Üst: Kullanılabilir Etiketi */}
                     {item.isUsable && (
                         <div style={{ position: "absolute", top: "4px", right: "4px", fontSize: "9px", backgroundColor: "#ff4757", padding: "2px 4px", borderRadius: "3px", pointerEvents: 'none', fontWeight: 'bold' }}>Kullan</div>
                     )}
@@ -64,7 +64,7 @@ const InventorySlot = ({ item, index, onDragStart, onDrop, onDragOver, onSlotCli
                     {/* Orta: İkon */}
                     <div style={{ marginTop: "10px", color: item?.isUsable ? "#ff4757" : "#fff", pointerEvents: 'none' }}>{item.icon}</div>
 
-                    {/* Sağ Alt: Miktar (Artık üstüne hiçbir şey binmeyecek, tamamen rahat) */}
+                    {/* Sağ Alt: Miktar */}
                     <div style={{ position: "absolute", bottom: "4px", right: "6px", fontSize: "12px", fontWeight: "bold", textShadow: "1px 1px 2px black", pointerEvents: 'none' }}>
                         {item.max ? `${item.count}/${item.max}` : item.count}
                     </div>
@@ -79,9 +79,9 @@ const InventorySlot = ({ item, index, onDragStart, onDrop, onDragOver, onSlotCli
 // ==========================================
 const InventoryDisplay = ({ inventory }) => {
     const dispatch = useDispatch();
-    const [activeActionMenu, setActiveActionMenu] = useState(null);
-
-    // YENİ: Atılacak eşya miktarını tutan state
+    const equipment = useSelector((state) => state.game.equipment) || [];
+    const [activeSlotIndex, setActiveSlotIndex] = useState(null);
+    const [swapSourceIndex, setSwapSourceIndex] = useState(null);
     const [dropAmount, setDropAmount] = useState(1);
 
     const handleDragStart = (e, index) => {
@@ -100,12 +100,85 @@ const InventoryDisplay = ({ inventory }) => {
     };
 
     const handleSlotClick = (index, itemProps) => {
-        setDropAmount(1); // Menü her açıldığında miktarı varsayılan olarak 1'e sıfırla
-        setActiveActionMenu({ index, item: itemProps });
+        // Eğer taşıma modu aktifse
+        if (swapSourceIndex !== null) {
+            if (swapSourceIndex !== index) {
+                dispatch(swapInventorySlots({ fromIndex: swapSourceIndex, toIndex: index }));
+            }
+            setSwapSourceIndex(null);
+            return;
+        }
+
+        if (itemProps && itemProps.count > 0) {
+            setDropAmount(1);
+            setActiveSlotIndex(index);
+        }
     };
+
+    // Güncel aktif slot verisini doğrudan Redux inventory'den oku
+    const activeSlot = activeSlotIndex !== null ? inventory[activeSlotIndex] : null;
+    let activeItemProps = null;
+    if (activeSlot) {
+        const meta = ITEM_META[activeSlot.itemId];
+        if (meta) activeItemProps = { ...meta, count: activeSlot.count, itemId: activeSlot.itemId };
+    }
 
     return (
         <div style={{ padding: '5px' }}>
+            {/* KUŞANILAN EKİPMANLAR & DAYANIKLILIK */}
+            <div style={{
+                backgroundColor: 'rgba(30, 20, 15, 0.6)',
+                border: '1px solid #5c3a21',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                marginBottom: '10px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+            }}>
+                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#d2b48c', letterSpacing: '0.5px' }}>
+                    🛡️ KUŞANILAN EKİPMANLAR
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {equipment.length === 0 ? (
+                        <span style={{ fontSize: '11px', color: '#777', fontStyle: 'italic' }}>Kuşanılmış ekipman yok</span>
+                    ) : (
+                        equipment.map((eq) => {
+                            const percent = Math.max(0, Math.round((eq.durability / eq.maxDurability) * 100));
+                            const name = eq.itemId === 'hook' ? 'Kanca' : eq.itemId === 'spear' ? 'Mızrak' : eq.itemId === 'oar' ? 'Kürek' : eq.itemId;
+                            const icon = eq.itemId === 'hook' ? <Anchor size={13} color="#d2b48c" /> : eq.itemId === 'spear' ? <Sword size={13} color="#ff6b81" /> : <Compass size={13} color="#4cd137" />;
+                            const barColor = percent > 50 ? '#4cd137' : percent > 20 ? '#ffb142' : '#ff4757';
+
+                            return (
+                                <div key={eq.id || eq.itemId} style={{
+                                    flex: '1 1 calc(33.3% - 6px)', minWidth: '90px',
+                                    backgroundColor: '#1e130e', border: '1px solid #5c3a21', borderRadius: '4px',
+                                    padding: '4px 6px', display: 'flex', flexDirection: 'column', gap: '3px'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#ddd' }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>{icon} {name}</span>
+                                        <span style={{ fontWeight: 'bold', color: barColor }}>%{percent}</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: '4px', backgroundColor: '#33231b', borderRadius: '2px', overflow: 'hidden' }}>
+                                        <div style={{ width: `${percent}%`, height: '100%', backgroundColor: barColor, transition: 'width 0.3s' }} />
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+
+            {swapSourceIndex !== null && (
+                <div style={{
+                    backgroundColor: '#e67e22', color: '#fff', padding: '8px',
+                    borderRadius: '6px', marginBottom: '10px', fontSize: '13px',
+                    textAlign: 'center', fontWeight: 'bold'
+                }}>
+                    🔄 Taşımak için hedef slota tıklayın (İptal etmek için seçili slota basın)
+                </div>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
                 {inventory.map((slot, index) => {
                     let itemProps = null;
@@ -116,6 +189,7 @@ const InventoryDisplay = ({ inventory }) => {
                     return (
                         <InventorySlot
                             key={index} index={index} item={itemProps}
+                            isSelected={swapSourceIndex === index}
                             onDragStart={handleDragStart} onDragOver={handleDragOver}
                             onDrop={handleDrop} onSlotClick={handleSlotClick}
                         />
@@ -124,9 +198,9 @@ const InventoryDisplay = ({ inventory }) => {
             </div>
 
             {/* POPUP MENÜ */}
-            {activeActionMenu && (
+            {activeItemProps && (
                 <div
-                    onClick={() => setActiveActionMenu(null)}
+                    onClick={() => setActiveSlotIndex(null)}
                     style={{
                         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                         backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 200,
@@ -137,31 +211,29 @@ const InventoryDisplay = ({ inventory }) => {
                         onClick={(e) => e.stopPropagation()}
                         style={{
                             backgroundColor: '#2d2d2d', border: '2px solid #5c3a21', borderRadius: '8px',
-                            padding: '20px', width: '80%', maxWidth: '280px',
+                            padding: '20px', width: '85%', maxWidth: '300px',
                             display: 'flex', flexDirection: 'column', gap: '12px',
                             boxShadow: '0 10px 40px rgba(0,0,0,0.9)'
                         }}
                     >
                         {/* 1. BAŞLIK */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '2px solid #5c3a21', paddingBottom: '15px', marginBottom: '5px' }}>
-                            <div style={{ color: activeActionMenu.item.isUsable ? '#ff4757' : '#d2b48c' }}>
-                                {activeActionMenu.item.icon}
+                            <div style={{ color: activeItemProps.isUsable ? '#ff4757' : '#d2b48c' }}>
+                                {activeItemProps.icon}
                             </div>
                             <div>
-                                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>{activeActionMenu.item.name}</div>
-                                <div style={{ color: '#aaa', fontSize: '12px' }}>Mevcut: {activeActionMenu.item.count} adet</div>
+                                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>{activeItemProps.name}</div>
+                                <div style={{ color: '#aaa', fontSize: '12px' }}>Mevcut: {activeItemProps.count} adet</div>
                             </div>
                         </div>
 
-                        {/* 2. KULLAN BUTONU (EN ÜSTE ALINDI) */}
-                        {activeActionMenu.item.isUsable && (
+                        {/* 2. KULLAN BUTONU */}
+                        {activeItemProps.isUsable && (
                             <button
                                 onClick={() => {
-                                    dispatch(activeActionMenu.item.action());
-                                    if (activeActionMenu.item.count <= 1) setActiveActionMenu(null);
-                                    else {
-                                        setActiveActionMenu(prev => ({ ...prev, item: { ...prev.item, count: prev.item.count - 1 } }));
-                                        setDropAmount(prev => Math.min(prev, activeActionMenu.item.count - 1));
+                                    dispatch(activeItemProps.action());
+                                    if (activeItemProps.count <= 1) {
+                                        setActiveSlotIndex(null);
                                     }
                                 }}
                                 style={{ padding: '12px', backgroundColor: '#4cd137', color: '#111', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
@@ -170,19 +242,27 @@ const InventoryDisplay = ({ inventory }) => {
                             </button>
                         )}
 
-                        {/* 3. MİKTAR SEÇİCİ (YERE AT BUTONUNUN ÜSTÜNE ALINDI) */}
-                        {activeActionMenu.item.count > 1 && (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1e1e1e', padding: '10px', borderRadius: '6px', marginTop: '10px' }}>
+                        {/* 3. TAŞI BUTONU (Mobilde Kolay Yer Değiştirme) */}
+                        <button
+                            onClick={() => {
+                                setSwapSourceIndex(activeSlotIndex);
+                                setActiveSlotIndex(null);
+                            }}
+                            style={{ padding: '10px', backgroundColor: '#3e2723', color: '#d2b48c', border: '1px solid #5c3a21', borderRadius: '5px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
+                        >
+                            📦 Başka Slota Taşı
+                        </button>
 
-                                {/* YENİ: MIN BUTONU (Sola eklendi) */}
+                        {/* 4. MİKTAR SEÇİCİ */}
+                        {activeItemProps.count > 1 && (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1e1e1e', padding: '10px', borderRadius: '6px' }}>
                                 <button
                                     onClick={() => setDropAmount(1)}
-                                    style={{ padding: '8px 12px', backgroundColor: '#8b0000', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                                    style={{ padding: '6px 10px', backgroundColor: '#8b0000', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                                 >
                                     MIN
                                 </button>
 
-                                {/* ORTA KISIM: - SAYI + */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                     <button
                                         onClick={() => setDropAmount(prev => Math.max(1, prev - 1))}
@@ -190,48 +270,46 @@ const InventoryDisplay = ({ inventory }) => {
                                     >-</button>
 
                                     <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px', minWidth: '24px', textAlign: 'center' }}>
-                                        {dropAmount}
+                                        {Math.min(dropAmount, activeItemProps.count)}
                                     </span>
 
                                     <button
-                                        onClick={() => setDropAmount(prev => Math.min(activeActionMenu.item.count, prev + 1))}
+                                        onClick={() => setDropAmount(prev => Math.min(activeItemProps.count, prev + 1))}
                                         style={{ backgroundColor: '#3e2723', color: '#d2b48c', border: '1px solid #5c3a21', width: '32px', height: '32px', borderRadius: '4px', fontSize: '20px', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
                                     >+</button>
                                 </div>
 
-                                {/* SAĞ KISIM: MAX BUTONU */}
                                 <button
-                                    onClick={() => setDropAmount(activeActionMenu.item.count)}
-                                    style={{ padding: '8px 12px', backgroundColor: '#8b0000', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                                    onClick={() => setDropAmount(activeItemProps.count)}
+                                    style={{ padding: '6px 10px', backgroundColor: '#8b0000', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                                 >
                                     MAX
                                 </button>
                             </div>
                         )}
 
-                        {/* 4. YERE AT BUTONU */}
+                        {/* 5. YERE AT BUTONU */}
                         <button
                             onClick={() => {
-                                dispatch(dropItem({ slotIndex: activeActionMenu.index, itemName: activeActionMenu.item.name, amount: dropAmount }));
-
-                                if (dropAmount >= activeActionMenu.item.count) {
-                                    setActiveActionMenu(null);
+                                const validAmount = Math.min(dropAmount, activeItemProps.count);
+                                dispatch(dropItem({ slotIndex: activeSlotIndex, itemName: activeItemProps.name, amount: validAmount }));
+                                if (validAmount >= activeItemProps.count) {
+                                    setActiveSlotIndex(null);
                                 } else {
-                                    setActiveActionMenu(prev => ({ ...prev, item: { ...prev.item, count: prev.item.count - dropAmount } }));
                                     setDropAmount(1);
                                 }
                             }}
                             style={{ padding: '12px', backgroundColor: '#e84118', color: '#fff', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                         >
-                            <Trash2 size={18} /> {dropAmount === activeActionMenu.item.count ? "HEPSİNİ YERE AT" : `${dropAmount} ADET YERE AT`}
+                            <Trash2 size={18} /> {dropAmount >= activeItemProps.count ? "HEPSİNİ YERE AT" : `${dropAmount} ADET YERE AT`}
                         </button>
 
-                        {/* 5. İPTAL BUTONU */}
+                        {/* 6. İPTAL BUTONU */}
                         <button
-                            onClick={() => setActiveActionMenu(null)}
-                            style={{ padding: '12px', backgroundColor: 'transparent', color: '#aaa', border: '2px solid #555', borderRadius: '5px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', marginTop: '5px' }}
+                            onClick={() => setActiveSlotIndex(null)}
+                            style={{ padding: '10px', backgroundColor: 'transparent', color: '#aaa', border: '2px solid #555', borderRadius: '5px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
                         >
-                            İptal
+                            Kapat
                         </button>
                     </div>
                 </div>

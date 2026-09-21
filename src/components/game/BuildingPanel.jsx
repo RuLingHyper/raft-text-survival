@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { debugGiveAllItems, buildNet, buildPurifier, buildGrill, craftBandage, craftSpear, craftOar, buildSOS, craftFishingRod, craftEmptyCup } from "../../store/gameSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { buildNet, buildPurifier, buildGrill, craftBandage, craftSpear, craftOar, buildSOS, craftFishingRod, craftEmptyCup } from "../../store/gameSlice";
 import { Grid, Droplets, Flame, PlusSquare, Utensils, Hammer, Sword, Compass, Radio, Fish, Coffee } from "lucide-react";
 
 // ==========================================
@@ -20,128 +20,245 @@ const CategoryBtn = ({ id, icon, currentCategory, setCategory }) => (
     </button>
 );
 
-const CraftCard = ({ name, desc, icon, cost, onCraft, disabled, btnText }) => (
-    <div style={{ backgroundColor: "rgba(139, 90, 43, 0.2)", border: "2px solid #5c3a21", borderRadius: "6px", padding: "10px", display: "flex", gap: "15px", alignItems: "center" }}>
-        <div style={{ backgroundColor: "#3e2723", padding: "10px", borderRadius: "4px", color: '#d2b48c' }}>
-            {icon}
+const CraftCard = ({ name, desc, icon, costs, onCraft, isBuilt, btnText }) => {
+    // costs: [{ name: 'Tahta', count: 4, has: 10 }, ...]
+    const canAfford = costs.every(c => c.has >= c.count);
+    const disabled = isBuilt || !canAfford;
+
+    return (
+        <div style={{
+            backgroundColor: "rgba(139, 90, 43, 0.2)",
+            border: `2px solid ${isBuilt ? '#2ed573' : canAfford ? '#8b5a2b' : '#443026'}`,
+            borderRadius: "6px", padding: "10px", display: "flex", gap: "12px", alignItems: "center",
+            opacity: isBuilt ? 0.7 : 1
+        }}>
+            <div style={{ backgroundColor: "#3e2723", padding: "10px", borderRadius: "4px", color: '#d2b48c' }}>
+                {icon}
+            </div>
+            <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '15px' }}>{name}</div>
+                <div style={{ color: '#aaa', fontSize: '12px', marginBottom: '6px' }}>{desc}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {costs.map((c, i) => {
+                        const satisfied = c.has >= c.count;
+                        return (
+                            <span key={i} style={{
+                                fontSize: '11px', fontWeight: 'bold',
+                                color: satisfied ? '#4cd137' : '#ff6b81',
+                                backgroundColor: satisfied ? 'rgba(76, 209, 55, 0.1)' : 'rgba(255, 107, 129, 0.1)',
+                                padding: '2px 5px', borderRadius: '3px'
+                            }}>
+                                {c.name}: {c.has}/{c.count} {satisfied ? '✓' : '✗'}
+                            </span>
+                        );
+                    })}
+                </div>
+            </div>
+            <button
+                onClick={onCraft}
+                disabled={disabled}
+                style={{
+                    padding: '10px 14px',
+                    backgroundColor: isBuilt ? '#2f3542' : canAfford ? '#4cd137' : '#33231b',
+                    color: isBuilt ? '#747d8c' : canAfford ? '#111' : '#777',
+                    border: 'none', borderRadius: '4px', fontWeight: 'bold',
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    whiteSpace: 'nowrap', transition: '0.2s'
+                }}
+            >
+                {isBuilt ? "Kurulu" : btnText || "Üret"}
+            </button>
         </div>
-        <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '15px' }}>{name}</div>
-            <div style={{ color: '#aaa', fontSize: '12px', marginBottom: '5px' }}>{desc}</div>
-            <div style={{ color: '#ffb142', fontSize: '11px', fontWeight: 'bold' }}>{cost}</div>
-        </div>
-        <button
-            onClick={onCraft}
-            disabled={disabled}
-            style={{ padding: '10px', backgroundColor: disabled ? '#555' : '#4cd137', color: disabled ? '#888' : '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: disabled ? 'not-allowed' : 'pointer' }}
-        >
-            {btnText || "Üret"}
-        </button>
-    </div>
-);
+    );
+};
 
 // ==========================================
 // ANA BİLEŞEN
 // ==========================================
 const BuildingPanel = ({ buildings }) => {
     const dispatch = useDispatch();
+    const inventory = useSelector((state) => state.game.inventory) || [];
     const [category, setCategory] = useState("food");
 
-    return (
-        <div style={{ display: 'flex', gap: '15px', minHeight: '420px' }}>
+    const getCount = (itemId) => {
+        return inventory.reduce((sum, slot) => {
+            return slot && slot.itemId === itemId ? sum + slot.count : sum;
+        }, 0);
+    };
 
-            {/* SOL KISIM: Kategoriler */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderRight: '2px solid #5c3a21', paddingRight: '15px' }}>
+    const countWood = getCount('wood');
+    const countPlastic = getCount('plastic');
+    const countLeaf = getCount('leaf');
+    const countMetal = getCount('metal');
+    const countCircuit = getCount('circuit_board');
+    const countBattery = getCount('military_battery');
+    const countAntenna = getCount('signal_antenna');
+
+    return (
+        <div style={{ display: 'flex', gap: '12px', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+
+            {/* SOL KISIM: Kategoriler (Sabit Yan Menü - Asla Kaymaz) */}
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                borderRight: '2px solid #5c3a21',
+                paddingRight: '12px',
+                flexShrink: 0
+            }}>
                 <CategoryBtn id="food" icon={<Utensils size={24} />} currentCategory={category} setCategory={setCategory} />
                 <CategoryBtn id="tools" icon={<Hammer size={24} />} currentCategory={category} setCategory={setCategory} />
                 <CategoryBtn id="weapons" icon={<Sword size={24} />} currentCategory={category} setCategory={setCategory} />
                 <CategoryBtn id="medical" icon={<PlusSquare size={24} />} currentCategory={category} setCategory={setCategory} />
-
-                {/* TEST BUTONU */}
-                <button
-                    onClick={() => dispatch(debugGiveAllItems())}
-                    style={{ marginTop: '20px', padding: '10px', backgroundColor: 'purple', color: 'white', border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}
-                >
-                    TEST: EŞYA AL
-                </button>
             </div>
 
-            {/* SAĞ KISIM: Seçili Kategori İçeriği */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '5px' }}>
+            {/* SAĞ KISIM: Başlık ve Sadece Ürünlerin Kaydırılabilir Olduğu Alan */}
+            <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0,
+                overflow: 'hidden'
+            }}>
+                {/* Sabit Kategori Başlığı */}
+                <h3 style={{
+                    margin: '0 0 10px 0',
+                    color: '#d2b48c',
+                    fontSize: '14px',
+                    borderBottom: '1px solid #5c3a21',
+                    paddingBottom: '5px',
+                    flexShrink: 0
+                }}>
+                    {category === "food" && "YİYECEK & İÇECEK"}
+                    {category === "tools" && "ARAÇ GEREÇLER"}
+                    {category === "weapons" && "SİLAHLAR"}
+                    {category === "medical" && "TIBBİ MALZEMELER"}
+                </h3>
 
-                {category === "food" && (
-                    <>
-                        <h3 style={{ margin: '0 0 10px 0', color: '#d2b48c', fontSize: '14px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>YİYECEK & İÇECEK</h3>
+                {/* Sadece Ürünlerin Olduğu Kaydırılabilir Liste */}
+                <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    paddingRight: '4px',
+                    overflowY: 'auto',
+                    minHeight: 0
+                }}>
+                    {category === "food" && (
+                        <>
+                            <CraftCard
+                                name="Su Arıtıcı" desc="Deniz suyunu içilebilir yapar."
+                                costs={[
+                                    { name: 'Plastik', count: 6, has: countPlastic },
+                                    { name: 'Metal', count: 2, has: countMetal }
+                                ]}
+                                icon={<Droplets size={24} />}
+                                isBuilt={buildings.waterPurifier}
+                                btnText="Kur"
+                                onCraft={() => dispatch(buildPurifier())}
+                            />
+                            <CraftCard
+                                name="Pişirme Izgarası" desc="Balıkları tahta harcamadan pişirir."
+                                costs={[
+                                    { name: 'Tahta', count: 5, has: countWood },
+                                    { name: 'Metal', count: 2, has: countMetal }
+                                ]}
+                                icon={<Flame size={24} />}
+                                isBuilt={buildings.grill}
+                                btnText="Kur"
+                                onCraft={() => dispatch(buildGrill())}
+                            />
+                        </>
+                    )}
 
-                        <CraftCard
-                            name="Su Arıtıcı" desc="Deniz suyunu içilebilir yapar." cost="6 Plastik, 2 Metal" icon={<Droplets size={24} />}
-                            disabled={buildings.waterPurifier} btnText={buildings.waterPurifier ? "Kurulu" : "Kur"}
-                            onCraft={() => dispatch(buildPurifier())}
-                        />
-                        <CraftCard
-                            name="Pişirme Izgarası" desc="Balıkları tahta harcamadan pişirir." cost="5 Tahta, 2 Metal" icon={<Flame size={24} />}
-                            disabled={buildings.grill} btnText={buildings.grill ? "Kurulu" : "Kur"}
-                            onCraft={() => dispatch(buildGrill())}
-                        />
-                    </>
-                )}
+                    {category === "tools" && (
+                        <>
+                            <CraftCard
+                                name="Olta" desc="Denizden balık tutmanı sağlar."
+                                costs={[
+                                    { name: 'Tahta', count: 4, has: countWood },
+                                    { name: 'Plastik', count: 2, has: countPlastic }
+                                ]}
+                                icon={<Fish size={24} />}
+                                btnText="Üret"
+                                onCraft={() => dispatch(craftFishingRod())}
+                            />
+                            <CraftCard
+                                name="Boş Bardak" desc="Denizden su doldurmak için."
+                                costs={[
+                                    { name: 'Plastik', count: 2, has: countPlastic }
+                                ]}
+                                icon={<Coffee size={24} />}
+                                btnText="Üret"
+                                onCraft={() => dispatch(craftEmptyCup())}
+                            />
+                            <CraftCard
+                                name="Ahşap Kürek" desc="Açık denizlerde seyahat etmeni sağlar."
+                                costs={[
+                                    { name: 'Tahta', count: 5, has: countWood },
+                                    { name: 'Plastik', count: 5, has: countPlastic }
+                                ]}
+                                icon={<Compass size={24} />}
+                                btnText="Üret"
+                                onCraft={() => dispatch(craftOar())}
+                            />
+                            <CraftCard
+                                name="Toplama Ağı" desc="Suda yüzen eşyaları otomatik yakalar."
+                                costs={[
+                                    { name: 'Tahta', count: 3, has: countWood },
+                                    { name: 'Plastik', count: 3, has: countPlastic }
+                                ]}
+                                icon={<Grid size={24} />}
+                                btnText={`Kur (${buildings.collectionNet})`}
+                                onCraft={() => dispatch(buildNet())}
+                            />
 
-                {category === "tools" && (
-                    <>
-                        <h3 style={{ margin: '0 0 10px 0', color: '#d2b48c', fontSize: '14px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>ARAÇ GEREÇLER</h3>
+                            <CraftCard
+                                name="S.O.S İstasyonu" desc="Helikopteri çağırır ve oyunu bitirir!"
+                                costs={[
+                                    { name: 'Devre Kartı', count: 1, has: countCircuit },
+                                    { name: 'Askeri Batarya', count: 1, has: countBattery },
+                                    { name: 'Sinyal Anteni', count: 1, has: countAntenna },
+                                    { name: 'Metal', count: 15, has: countMetal },
+                                    { name: 'Plastik', count: 20, has: countPlastic }
+                                ]}
+                                icon={<Radio size={24} color="#ff3f34" />}
+                                btnText="İNŞA ET VE KURTUL"
+                                onCraft={() => dispatch(buildSOS())}
+                            />
+                        </>
+                    )}
 
-                        <CraftCard
-                            name="Olta" desc="Denizden balık tutmanı sağlar." cost="4 Tahta, 2 Plastik" icon={<Fish size={24} />}
-                            disabled={false} btnText="Üret"
-                            onCraft={() => dispatch(craftFishingRod())}
-                        />
-                        <CraftCard
-                            name="Boş Bardak" desc="Denizden su doldurmak için." cost="2 Plastik" icon={<Coffee size={24} />}
-                            disabled={false} btnText="Üret"
-                            onCraft={() => dispatch(craftEmptyCup())}
-                        />
-                        <CraftCard
-                            name="Ahşap Kürek" desc="Açık denizlerde seyahat etmeni sağlar." cost="5 Tahta, 5 Plastik" icon={<Compass size={24} />}
-                            disabled={false} btnText="Üret"
-                            onCraft={() => dispatch(craftOar())}
-                        />
-                        <CraftCard
-                            name="Toplama Ağı" desc="Suda yüzen eşyaları otomatik yakalar." cost="3 Tahta, 3 Plastik" icon={<Grid size={24} />}
-                            disabled={false} btnText="Kur"
-                            onCraft={() => dispatch(buildNet())}
-                        />
+                    {category === "weapons" && (
+                        <>
+                            <CraftCard
+                                name="Tahta Mızrak" desc="Seni köpek balığı saldırılarından korur."
+                                costs={[
+                                    { name: 'Tahta', count: 4, has: countWood },
+                                    { name: 'Metal', count: 1, has: countMetal }
+                                ]}
+                                icon={<Sword size={24} />}
+                                btnText="Üret"
+                                onCraft={() => dispatch(craftSpear())}
+                            />
+                        </>
+                    )}
 
-                        <CraftCard
-                            name="S.O.S İstasyonu" desc="Helikopteri çağırır ve oyunu bitirir!"
-                            cost="1 Kart, 1 Batarya, 1 Anten, 15 Metal, 20 Plastik" icon={<Radio size={24} color="#ff3f34" />}
-                            disabled={false} btnText="İNŞA ET VE KURTUL"
-                            onCraft={() => dispatch(buildSOS())}
-                        />
-                    </>
-                )}
-
-                {category === "weapons" && (
-                    <>
-                        <h3 style={{ margin: '0 0 10px 0', color: '#d2b48c', fontSize: '14px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>SİLAHLAR</h3>
-                        <CraftCard
-                            name="Tahta Mızrak" desc="Seni köpek balığı saldırılarından korur." cost="4 Tahta, 1 Metal" icon={<Sword size={24} />}
-                            disabled={false} btnText="Üret"
-                            onCraft={() => dispatch(craftSpear())}
-                        />
-                    </>
-                )}
-
-                {category === "medical" && (
-                    <>
-                        <h3 style={{ margin: '0 0 10px 0', color: '#d2b48c', fontSize: '14px', borderBottom: '1px solid #5c3a21', paddingBottom: '5px' }}>TIBBİ MALZEMELER</h3>
-                        <CraftCard
-                            name="Şifalı Bandaj" desc="Yaraları iyileştirir ve 25 Can verir." cost="3 Yaprak" icon={<PlusSquare size={24} />}
-                            disabled={false} btnText="Üret"
-                            onCraft={() => dispatch(craftBandage())}
-                        />
-                    </>
-                )}
-
+                    {category === "medical" && (
+                        <>
+                            <CraftCard
+                                name="Şifalı Bandaj" desc="Yaraları iyileştirir ve 25 Can verir."
+                                costs={[
+                                    { name: 'Yaprak', count: 3, has: countLeaf }
+                                ]}
+                                icon={<PlusSquare size={24} />}
+                                btnText="Üret"
+                                onCraft={() => dispatch(craftBandage())}
+                            />
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );

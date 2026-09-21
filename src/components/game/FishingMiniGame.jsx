@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { endFishingMode } from "../../store/gameSlice";
-import { Fish } from "lucide-react";
+import { Fish, X } from "lucide-react";
 
 const FishingMiniGame = () => {
     const dispatch = useDispatch();
@@ -11,15 +11,22 @@ const FishingMiniGame = () => {
     const positionRef = useRef(50);
     const directionRef = useRef(1);
     const requestRef = useRef();
+    const lastTimeRef = useRef(performance.now());
 
-    const speed = 1.8;
+    // Saniyede %80 hareket eder (Ekran yenileme hızı 60Hz, 120Hz veya 144Hz fark etmeksizin her ekranda aynı hız!)
+    const speedPerSecond = 80;
     const targetStart = 35;
     const targetEnd = 65;
     const requiredHits = 3;
 
     useEffect(() => {
-        const animate = () => {
-            positionRef.current += speed * directionRef.current;
+        lastTimeRef.current = performance.now();
+
+        const animate = (time) => {
+            const delta = Math.min((time - lastTimeRef.current) / 1000, 0.1);
+            lastTimeRef.current = time;
+
+            positionRef.current += speedPerSecond * delta * directionRef.current;
 
             if (positionRef.current >= 100) {
                 positionRef.current = 100;
@@ -37,7 +44,7 @@ const FishingMiniGame = () => {
         return () => cancelAnimationFrame(requestRef.current);
     }, []);
 
-    // YENİ: handleTap artık 'position' state'i yerine doğrudan anlık 'positionRef' değerini okuyor (Sıfır gecikme!)
+    // handleTap anlık positionRef değerini okur
     const handleTap = () => {
         const currentPos = positionRef.current;
 
@@ -54,6 +61,10 @@ const FishingMiniGame = () => {
         }
     };
 
+    const handleCancel = () => {
+        dispatch(endFishingMode({ cancelled: true }));
+    };
+
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -64,8 +75,22 @@ const FishingMiniGame = () => {
             <div style={{
                 backgroundColor: '#3e2723', border: '3px solid #5c3a21',
                 borderRadius: '12px', padding: '25px', width: '90%', maxWidth: '400px',
-                textAlign: 'center', color: '#fff', boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+                textAlign: 'center', color: '#fff', boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                position: 'relative'
             }}>
+                {/* Kapat / Vazgeç Butonu */}
+                <button
+                    onClick={handleCancel}
+                    style={{
+                        position: 'absolute', top: '12px', right: '12px',
+                        background: 'none', border: 'none', color: '#ff4757',
+                        cursor: 'pointer', padding: '4px', display: 'flex'
+                    }}
+                    title="Vazgeç"
+                >
+                    <X size={24} />
+                </button>
+
                 <Fish size={40} color="#ffb142" style={{ marginBottom: '10px' }} />
                 <h2 style={{ margin: '0 0 10px 0', color: '#d2b48c' }}>Balık Yakalandı!</h2>
                 <p style={{ fontSize: '13px', color: '#aaa', marginBottom: '25px' }}>

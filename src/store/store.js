@@ -10,12 +10,29 @@ const loadState = () => {
         }
         const parsedState = JSON.parse(serializedState);
 
+        // Eğer oyun bitmişse (ölüm veya zafer), eski kaydı silip sıfırdan başlatalım
+        if (parsedState && parsedState.game && (parsedState.game.isGameOver || parsedState.game.isGameWon)) {
+            localStorage.removeItem('rafttextsurvival_save');
+            return undefined;
+        }
+
         // ÇOK ÖNEMLİ DETAY: 
         // Oyuncu sayfayı yenilediğinde (F5) direkt oyunun ortasında doğmasın, 
         // Ana Menü ekranını görsün diye oyunu durdurulmuş ve başlamamış olarak ayarlıyoruz.
         if (parsedState && parsedState.game) {
             parsedState.game.isGameStarted = false;
             parsedState.game.isGamePaused = false;
+            parsedState.game.isFishingMode = false;
+            if (!parsedState.game.buildings) {
+                parsedState.game.buildings = { collectionNet: 0, waterPurifier: false, grill: false };
+            }
+            if (typeof parsedState.game.sharkCooldown !== 'number') {
+                parsedState.game.sharkCooldown = 40;
+            }
+            if (typeof parsedState.game.grillTimer !== 'number') parsedState.game.grillTimer = 0;
+            if (typeof parsedState.game.purifierTimer !== 'number') parsedState.game.purifierTimer = 0;
+            if (typeof parsedState.game.isGrillActive !== 'boolean') parsedState.game.isGrillActive = false;
+            if (typeof parsedState.game.isPurifierActive !== 'boolean') parsedState.game.isPurifierActive = false;
         }
 
         return parsedState;
@@ -28,6 +45,10 @@ const loadState = () => {
 // 2. ADIM: Oyundaki mevcut durumu tarayıcı hafızasına (localStorage) kaydeden fonksiyon
 const saveState = (state) => {
     try {
+        if (!state || !state.game || state.game.isGameOver || state.game.isGameWon) {
+            localStorage.removeItem('rafttextsurvival_save');
+            return;
+        }
         const serializedState = JSON.stringify(state);
         localStorage.setItem('rafttextsurvival_save', serializedState);
     } catch (err) {

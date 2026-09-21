@@ -5,22 +5,22 @@ import { Pause, Heart, Utensils, Droplets, Sun, Moon, CloudRain, CloudLightning 
 
 const GameHeader = ({ vitals }) => {
     const dispatch = useDispatch();
-    // Redux'tan gün, saat ve tickCount bilgisini çekiyoruz
-    const { day, time, tickCount, weather } = useSelector(state => state.game);
+    // Redux'tan gün, saat, hava durumu ve aktif sayaçları çekiyoruz
+    const { day, time, tickCount, weather, isGrillActive, grillTimer, isPurifierActive, purifierTimer } = useSelector(state => state.game);
 
     // Gece mi gündüz mü kontrolü (Akşam 8 ile Sabah 6 arası gece)
     const isNight = time >= 20 || time < 6;
 
-    // YENİ: Dakika hesaplama (Çift tick'lerde 00, tek tick'lerde 30)
+    // Dakika hesaplama (Çift tick'lerde 00, tek tick'lerde 30)
     const minutes = tickCount % 2 === 0 ? "00" : "30";
 
     return (
         <div style={{
-            display: 'flex', flexDirection: 'column', gap: '15px',
+            display: 'flex', flexDirection: 'column', gap: '8px',
             backgroundColor: isNight ? 'rgba(20, 20, 30, 0.85)' : 'rgba(139, 90, 43, 0.2)', // Gece karanlık, gündüz ahşap
             border: isNight ? '2px solid #2d3436' : '2px solid #5c3a21',
-            padding: '15px', borderRadius: '10px', marginBottom: '20px',
-            transition: 'all 1s ease' // Geceye geçerken yumuşak animasyon
+            padding: '10px 12px', borderRadius: '10px',
+            transition: 'all 1s ease'
         }}>
 
             {/* ÜST SATIR: Zaman ve Durdur Butonu */}
@@ -40,8 +40,6 @@ const GameHeader = ({ vitals }) => {
                         {weather === 'stormy' && <CloudLightning size={20} color="#fdcb6e" />}
                     </div>
                 </div>
-
-
 
                 {/* DURDUR BUTONU */}
                 <button
@@ -64,6 +62,32 @@ const GameHeader = ({ vitals }) => {
                     <Droplets size={18} fill="#70a1ff" /> %{vitals.thirst}
                 </div>
             </div>
+
+            {/* AKTİF SÜREÇLER (Izgara / Arıtıcı Sayaçları) */}
+            {(isGrillActive || isPurifierActive) && (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    {isGrillActive && (
+                        <div style={{
+                            flex: 1, backgroundColor: 'rgba(235, 77, 75, 0.25)', border: '1px solid #eb4d4b',
+                            borderRadius: '6px', padding: '6px 10px', fontSize: '12px', color: '#ff7979',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 'bold'
+                        }}>
+                            <span>🔥 Izgara</span>
+                            <span>~{grillTimer * 3}s</span>
+                        </div>
+                    )}
+                    {isPurifierActive && (
+                        <div style={{
+                            flex: 1, backgroundColor: 'rgba(52, 172, 224, 0.25)', border: '1px solid #34ace0',
+                            borderRadius: '6px', padding: '6px 10px', fontSize: '12px', color: '#70a1ff',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 'bold'
+                        }}>
+                            <span>💧 Arıtıcı</span>
+                            <span>~{purifierTimer * 3}s</span>
+                        </div>
+                    )}
+                </div>
+            )}
 
         </div>
     );
