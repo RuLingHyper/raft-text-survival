@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useBandage, drinkWater, eatFood, dropItem, swapInventorySlots, fillCup, startPurifying, startFishingMode, startCooking } from "../../store/gameSlice";
-import { TreePine, Box, Leaf, Wrench, PlusSquare, Droplets, Utensils, Trash2, CheckCircle, Cpu, Battery, Radio, Fish, Coffee, Waves } from "lucide-react";
+import { TreePine, Box, Leaf, Wrench, PlusSquare, Droplets, Utensils, Trash2, CheckCircle, Cpu, Battery, Radio, Fish, Coffee, Waves, Anchor, Sword, Compass } from "lucide-react";
 
 // ==========================================
 // SABİT EŞYA ÖZELLİKLERİ (METADATA SÖZLÜĞÜ)
@@ -16,8 +16,8 @@ const ITEM_META = {
     water: { name: "Temiz Su", max: 20, icon: <Droplets size={24} />, isUsable: true, action: drinkWater },
     food: { name: "Pişmiş Balık", max: 20, icon: <Utensils size={24} />, isUsable: true, action: eatFood },
     fishing_rod: { name: "Olta", max: 1, icon: <Fish size={24} color="#ffb142" />, isUsable: true, action: startFishingMode },
-    empty_cup: { name: "Boş Bardak", max: 1, icon: <Coffee size={24} color="#d2dae2" />, isUsable: true, action: fillCup },
-    salt_water: { name: "Tuzlu Su", max: 1, icon: <Waves size={24} color="#34ace0" />, isUsable: true, action: startPurifying },
+    empty_cup: { name: "Boş Bardak", max: 5, icon: <Coffee size={24} color="#d2dae2" />, isUsable: true, action: fillCup },
+    salt_water: { name: "Tuzlu Su", max: 5, icon: <Waves size={24} color="#34ace0" />, isUsable: true, action: startPurifying },
     raw_fish: { name: "Çiğ Balık", max: 10, icon: <Fish size={24} color="#ff5252" />, isUsable: true, action: startCooking },
 
     circuit_board: { name: "Devre Kartı", max: 1, icon: <Cpu size={24} color="#00d8d6" /> },
@@ -79,6 +79,7 @@ const InventorySlot = ({ item, index, isSelected, onDragStart, onDrop, onDragOve
 // ==========================================
 const InventoryDisplay = ({ inventory }) => {
     const dispatch = useDispatch();
+    const equipment = useSelector((state) => state.game.equipment) || [];
     const [activeSlotIndex, setActiveSlotIndex] = useState(null);
     const [swapSourceIndex, setSwapSourceIndex] = useState(null);
     const [dropAmount, setDropAmount] = useState(1);
@@ -124,6 +125,50 @@ const InventoryDisplay = ({ inventory }) => {
 
     return (
         <div style={{ padding: '5px' }}>
+            {/* KUŞANILAN EKİPMANLAR & DAYANIKLILIK */}
+            <div style={{
+                backgroundColor: 'rgba(30, 20, 15, 0.6)',
+                border: '1px solid #5c3a21',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                marginBottom: '10px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+            }}>
+                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#d2b48c', letterSpacing: '0.5px' }}>
+                    🛡️ KUŞANILAN EKİPMANLAR
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {equipment.length === 0 ? (
+                        <span style={{ fontSize: '11px', color: '#777', fontStyle: 'italic' }}>Kuşanılmış ekipman yok</span>
+                    ) : (
+                        equipment.map((eq) => {
+                            const percent = Math.max(0, Math.round((eq.durability / eq.maxDurability) * 100));
+                            const name = eq.itemId === 'hook' ? 'Kanca' : eq.itemId === 'spear' ? 'Mızrak' : eq.itemId === 'oar' ? 'Kürek' : eq.itemId;
+                            const icon = eq.itemId === 'hook' ? <Anchor size={13} color="#d2b48c" /> : eq.itemId === 'spear' ? <Sword size={13} color="#ff6b81" /> : <Compass size={13} color="#4cd137" />;
+                            const barColor = percent > 50 ? '#4cd137' : percent > 20 ? '#ffb142' : '#ff4757';
+
+                            return (
+                                <div key={eq.id || eq.itemId} style={{
+                                    flex: '1 1 calc(33.3% - 6px)', minWidth: '90px',
+                                    backgroundColor: '#1e130e', border: '1px solid #5c3a21', borderRadius: '4px',
+                                    padding: '4px 6px', display: 'flex', flexDirection: 'column', gap: '3px'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#ddd' }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>{icon} {name}</span>
+                                        <span style={{ fontWeight: 'bold', color: barColor }}>%{percent}</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: '4px', backgroundColor: '#33231b', borderRadius: '2px', overflow: 'hidden' }}>
+                                        <div style={{ width: `${percent}%`, height: '100%', backgroundColor: barColor, transition: 'width 0.3s' }} />
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+
             {swapSourceIndex !== null && (
                 <div style={{
                     backgroundColor: '#e67e22', color: '#fff', padding: '8px',

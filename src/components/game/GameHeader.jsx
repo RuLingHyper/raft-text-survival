@@ -73,7 +73,7 @@ const GameHeader = ({ vitals }) => {
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 'bold'
                         }}>
                             <span>🔥 Izgara</span>
-                            <span>{grillTimer}s</span>
+                            <span>~{grillTimer * 3}s</span>
                         </div>
                     )}
                     {isPurifierActive && (
@@ -83,7 +83,7 @@ const GameHeader = ({ vitals }) => {
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 'bold'
                         }}>
                             <span>💧 Arıtıcı</span>
-                            <span>{purifierTimer}s</span>
+                            <span>~{purifierTimer * 3}s</span>
                         </div>
                     )}
                 </div>

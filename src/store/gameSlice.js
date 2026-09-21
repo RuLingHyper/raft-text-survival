@@ -139,14 +139,22 @@ export const gameSlice = createSlice({
 
         tradeWithMerchant: (state) => {
             const { costItem, costCount, rewardItem, rewardCount } = state.merchant.offer;
-            if (hasEnough(state, costItem, costCount)) {
-                removeItems(state, costItem, costCount);
-                addItem(state, rewardItem, rewardCount);
-                state.merchant.active = false;
-                state.logs.unshift(`✅ Martı ile ticaret yaptın: ${costCount} ${costItem} verip, ${rewardCount} ${rewardItem} aldın.`);
-            } else {
+            if (!hasEnough(state, costItem, costCount)) {
                 state.logs.unshift("❌ Martı, teklifini kabul etmedi: Yeterli eşyan yok!");
+                return;
             }
+
+            // Önce eşyayı düşür ve ödülü eklemeyi dene
+            removeItems(state, costItem, costCount);
+            if (!addItem(state, rewardItem, rewardCount)) {
+                // Eğer ödül çantaya sığmadıysa maliyeti geri iade et
+                addItem(state, costItem, costCount);
+                state.logs.unshift("❌ Çantanda takas ödülü için yeterli yer yok!");
+                return;
+            }
+
+            state.merchant.active = false;
+            state.logs.unshift(`✅ Martı ile ticaret yaptın: ${costCount} ${costItem} verip, ${rewardCount} ${rewardItem} aldın.`);
         },
 
         dropItem: (state, action) => {
@@ -163,9 +171,30 @@ export const gameSlice = createSlice({
 
         swapInventorySlots: (state, action) => {
             const { fromIndex, toIndex } = action.payload;
-            const temp = state.inventory[fromIndex];
-            state.inventory[fromIndex] = state.inventory[toIndex];
-            state.inventory[toIndex] = temp;
+            if (fromIndex === toIndex) return;
+
+            const source = state.inventory[fromIndex];
+            const target = state.inventory[toIndex];
+
+            // Eğer her iki slotta da aynı eşya varsa: Birleştir (Stack Merging)
+            if (source && target && source.itemId === target.itemId) {
+                const maxLimit = STACK_LIMITS[source.itemId] || 50;
+                const spaceLeft = maxLimit - target.count;
+                if (spaceLeft > 0) {
+                    if (source.count <= spaceLeft) {
+                        target.count += source.count;
+                        state.inventory[fromIndex] = null;
+                    } else {
+                        target.count = maxLimit;
+                        source.count -= spaceLeft;
+                    }
+                    return;
+                }
+            }
+
+            // Normal yer değiştirme
+            state.inventory[fromIndex] = target;
+            state.inventory[toIndex] = source;
         },
 
         throwHook: (state) => {
@@ -360,8 +389,6 @@ export const gameSlice = createSlice({
 
             if (state.vitals.health <= 0) {
                 state.isGameOver = true;
-                localStorage.removeItem('rafttextsurvival_save');
-                localStorage.removeItem('gameState');
             }
 
             // ==========================================
@@ -429,11 +456,16 @@ export const gameSlice = createSlice({
         },
 
         fillCup: (state) => {
-            if (hasEnough(state, 'empty_cup', 1)) {
-                removeItems(state, 'empty_cup', 1);
-                addItem(state, 'salt_water', 1);
-                state.logs.unshift("🌊 Bardağa deniz suyu doldurdun. Bunu içemezsin, arıtman lazım!");
+            if (!hasEnough(state, 'empty_cup', 1)) return;
+
+            removeItems(state, 'empty_cup', 1);
+            if (!addItem(state, 'salt_water', 1)) {
+                // Yer yoksa bardağı geri iade et
+                addItem(state, 'empty_cup', 1);
+                state.logs.unshift("❌ Çantanda Tuzlu Su için boş yer yok!");
+                return;
             }
+            state.logs.unshift("🌊 Bardağa deniz suyu doldurdun. Bunu içemezsin, arıtman lazım!");
         },
 
         startCooking: (state) => {
@@ -448,8 +480,8 @@ export const gameSlice = createSlice({
             if (hasEnough(state, 'raw_fish', 1)) {
                 removeItems(state, 'raw_fish', 1);
                 state.isGrillActive = true;
-                state.grillTimer = 10;
-                state.logs.unshift("🔥 Çiğ balığı ızgaraya attın, pişmesi 10 saniye sürecek...");
+                state.grillTimer = 3;
+                state.logs.unshift("🔥 Çiğ balığı ızgaraya attın, pişmesi ~9 saniye sürecek...");
             } else {
                 state.logs.unshift("Çantanda pişirecek Çiğ Balık yok!");
             }
@@ -467,8 +499,8 @@ export const gameSlice = createSlice({
             if (hasEnough(state, 'salt_water', 1)) {
                 removeItems(state, 'salt_water', 1);
                 state.isPurifierActive = true;
-                state.purifierTimer = 8;
-                state.logs.unshift("🔥 Tuzlu suyu arıtıcıya koydun, 8 saniye sonra içilebilir olacak...");
+                state.purifierTimer = 3;
+                state.logs.unshift("🔥 Tuzlu suyu arıtıcıya koydun, ~9 saniye sonra içilebilir olacak...");
             } else {
                 state.logs.unshift("Çantanda arıtılacak Tuzlu Su yok!");
             }
@@ -480,7 +512,12 @@ export const gameSlice = createSlice({
 
         endFishingMode: (state, action) => {
             state.isFishingMode = false;
-            const { success, reward } = action.payload;
+            const { success, reward, cancelled } = action.payload || {};
+
+            if (cancelled) {
+                state.logs.unshift("🎣 Balık tutmaktan vazgeçtin.");
+                return;
+            }
 
             if (success) {
                 if (reward === 'fish') {
@@ -670,8 +707,6 @@ export const gameSlice = createSlice({
                 removeItems(state, 'plastic', 20);
 
                 state.isGameWon = true;
-                localStorage.removeItem('rafttextsurvival_save');
-                localStorage.removeItem('gameState');
                 state.logs.unshift("🚁 SOS Sinyali başarıyla gönderildi! Kurtarma helikopteri ufukta göründü...");
             } else {
                 state.logs.unshift("SOS İstasyonu kurmak için 3 nadir parçaya (Devre Kartı, Batarya, Anten) ve 15 Metal, 20 Plastiğe ihtiyacın var!");
@@ -684,10 +719,13 @@ export const gameSlice = createSlice({
             if (state.vitals.thirst >= 100) { state.logs.unshift("Zaten hiç susamadın."); return; }
 
             removeItems(state, 'water', 1);
-            addItem(state, 'empty_cup', 1);
+            if (!addItem(state, 'empty_cup', 1)) {
+                state.logs.unshift("💧 Temiz Su içtin ama çantan dolu olduğu için boş bardak denize düştü! (+45 Susuzluk)");
+            } else {
+                state.logs.unshift("💧 Temiz Su içtin, boş bardak çantana eklendi. (+45 Susuzluk)");
+            }
 
             state.vitals.thirst = Math.min(100, state.vitals.thirst + 45);
-            state.logs.unshift("💧 Temiz Su içtin, boş bardak çantana eklendi. (+45 Susuzluk)");
         },
 
         eatFood: (state) => {
@@ -754,9 +792,6 @@ export const gameSlice = createSlice({
             state.isGrillActive = false;
             state.isPurifierActive = false;
             state.isFishingMode = false;
-
-            localStorage.removeItem('gameState');
-            localStorage.removeItem('rafttextsurvival_save');
 
             state.isGameOver = false;
             state.isGameWon = false;

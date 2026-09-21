@@ -10,6 +10,12 @@ const loadState = () => {
         }
         const parsedState = JSON.parse(serializedState);
 
+        // Eğer oyun bitmişse (ölüm veya zafer), eski kaydı silip sıfırdan başlatalım
+        if (parsedState && parsedState.game && (parsedState.game.isGameOver || parsedState.game.isGameWon)) {
+            localStorage.removeItem('rafttextsurvival_save');
+            return undefined;
+        }
+
         // ÇOK ÖNEMLİ DETAY: 
         // Oyuncu sayfayı yenilediğinde (F5) direkt oyunun ortasında doğmasın, 
         // Ana Menü ekranını görsün diye oyunu durdurulmuş ve başlamamış olarak ayarlıyoruz.
@@ -39,6 +45,10 @@ const loadState = () => {
 // 2. ADIM: Oyundaki mevcut durumu tarayıcı hafızasına (localStorage) kaydeden fonksiyon
 const saveState = (state) => {
     try {
+        if (!state || !state.game || state.game.isGameOver || state.game.isGameWon) {
+            localStorage.removeItem('rafttextsurvival_save');
+            return;
+        }
         const serializedState = JSON.stringify(state);
         localStorage.setItem('rafttextsurvival_save', serializedState);
     } catch (err) {
