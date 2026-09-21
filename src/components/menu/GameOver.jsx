@@ -1,25 +1,30 @@
-import React from "react";
-import { useDispatch } from "react-redux";
-// gameSlice'dan gerekli fonksiyonları çağırıyoruz
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { startNewGame, quitToMenu } from "../../store/gameSlice";
-import { Skull, RotateCcw, Home } from "lucide-react"; // Kuru kafa ikonumuz
+import { Skull, RotateCcw, Home } from "lucide-react";
+import { playGameOver, playClick } from "../../utils/soundEffects";
 
 const GameOver = () => {
     const dispatch = useDispatch();
+    const isSoundEnabled = useSelector((state) => state.game.isSoundEnabled);
+
+    useEffect(() => {
+        playGameOver(isSoundEnabled);
+    }, [isSoundEnabled]);
 
     return (
         <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            minHeight: '100vh', backgroundColor: '#0a0a0a', padding: '15px' // Kapkaranlık bir arka plan
+            minHeight: '100vh', backgroundColor: '#0a0a0a', padding: '15px'
         }}>
 
             {/* KAN KIRMIZISI AHŞAP KUTU */}
             <div style={{
-                backgroundColor: '#1a100c', // Normal ahşaptan daha karanlık, ürkütücü bir ton
+                backgroundColor: '#1a100c',
                 padding: '40px 30px',
                 borderRadius: '12px',
-                border: '3px solid #ff4757', // Kırmızı kenarlık
-                boxShadow: '0 0 50px rgba(255, 71, 87, 0.3)', // Kırmızı ölüm parlaması
+                border: '3px solid #ff4757',
+                boxShadow: '0 0 50px rgba(255, 71, 87, 0.3)',
                 width: '100%', maxWidth: '400px',
                 textAlign: 'center'
             }}>
@@ -40,9 +45,12 @@ const GameOver = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
-                    {/* YENİDEN BAŞLA BUTONU (Dikkat Çekici) */}
+                    {/* YENİDEN BAŞLA BUTONU */}
                     <button
-                        onClick={() => dispatch(startNewGame())}
+                        onClick={() => {
+                            playClick(isSoundEnabled);
+                            dispatch(startNewGame());
+                        }}
                         style={{
                             padding: '16px', backgroundColor: '#8b0000', color: '#fff',
                             border: '2px solid #ff4757', borderRadius: '8px', fontSize: '18px', fontWeight: 'bold',
@@ -55,7 +63,10 @@ const GameOver = () => {
 
                     {/* ANA MENÜYE DÖN BUTONU */}
                     <button
-                        onClick={() => dispatch(quitToMenu())}
+                        onClick={() => {
+                            playClick(isSoundEnabled);
+                            dispatch(quitToMenu());
+                        }}
                         style={{
                             padding: '16px', backgroundColor: '#2e1c14', color: '#aaa',
                             border: '2px solid #5c3a21', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold',

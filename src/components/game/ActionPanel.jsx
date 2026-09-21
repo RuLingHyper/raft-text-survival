@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { throwHook, gatherByHand, craftHook } from "../../store/gameSlice";
 import { Anchor, Hand, Hammer } from "lucide-react";
+import { playHookThrow, playClick } from "../../utils/soundEffects";
 
 const ActionPanel = ({ hasHook }) => {
     const dispatch = useDispatch();
     const equipment = useSelector((state) => state.game.equipment) || [];
+    const isSoundEnabled = useSelector((state) => state.game.isSoundEnabled);
     const hook = equipment.find(item => item.itemId === 'hook');
 
     // Kanca Bekleme Süresi (Cooldown)
@@ -46,6 +48,7 @@ const ActionPanel = ({ hasHook }) => {
 
     const handleThrowHook = () => {
         if (isHookCoolingDown) return;
+        playHookThrow(isSoundEnabled);
         dispatch(throwHook());
         setIsHookCoolingDown(true);
         setCooldownTime(3);
@@ -53,6 +56,7 @@ const ActionPanel = ({ hasHook }) => {
 
     const handleGatherByHand = () => {
         if (isGatherCoolingDown) return;
+        playClick(isSoundEnabled);
         dispatch(gatherByHand());
         setIsGatherCoolingDown(true);
         setGatherCooldownTime(2);

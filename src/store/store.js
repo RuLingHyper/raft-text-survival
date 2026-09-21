@@ -24,7 +24,11 @@ const loadState = () => {
             parsedState.game.isGamePaused = false;
             parsedState.game.isFishingMode = false;
             if (!parsedState.game.buildings) {
-                parsedState.game.buildings = { collectionNet: 0, waterPurifier: false, grill: false };
+                parsedState.game.buildings = { collectionNet: 0, waterPurifier: false, grill: false, raftSize: 4, shelter: false, sail: false };
+            } else {
+                if (typeof parsedState.game.buildings.raftSize !== 'number') parsedState.game.buildings.raftSize = 4;
+                if (typeof parsedState.game.buildings.shelter !== 'boolean') parsedState.game.buildings.shelter = false;
+                if (typeof parsedState.game.buildings.sail !== 'boolean') parsedState.game.buildings.sail = false;
             }
             if (typeof parsedState.game.sharkCooldown !== 'number') {
                 parsedState.game.sharkCooldown = 40;
@@ -33,6 +37,8 @@ const loadState = () => {
             if (typeof parsedState.game.purifierTimer !== 'number') parsedState.game.purifierTimer = 0;
             if (typeof parsedState.game.isGrillActive !== 'boolean') parsedState.game.isGrillActive = false;
             if (typeof parsedState.game.isPurifierActive !== 'boolean') parsedState.game.isPurifierActive = false;
+            if (typeof parsedState.game.isSoundEnabled !== 'boolean') parsedState.game.isSoundEnabled = true;
+            if (!parsedState.game.weather) parsedState.game.weather = 'sunny';
         }
 
         return parsedState;

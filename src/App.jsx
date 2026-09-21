@@ -28,12 +28,28 @@ function App() {
     return () => clearInterval(timer);
   }, [dispatch]);
 
-  const { vitals, inventory, logs, isGameStarted, isGameOver, isGameWon, buildings, equipment, isGamePaused, isFishingMode } = useSelector((state) => state.game);
+  const { vitals, inventory, logs, isGameStarted, isGameOver, isGameWon, buildings, equipment, isGamePaused, isFishingMode, weather, time } = useSelector((state) => state.game);
 
   const safeEquipment = Array.isArray(equipment) ? equipment : [];
   const hasSpear = safeEquipment.some(item => item.itemId === 'spear');
   const hasOar = safeEquipment.some(item => item.itemId === 'oar');
   const hasHook = safeEquipment.some(item => item.itemId === 'hook');
+
+  const isNight = time >= 20 || time < 6;
+  const isStormy = weather === 'stormy';
+  const isRainy = weather === 'rainy';
+
+  const getAtmosphereBg = () => {
+    if (isNight) {
+      if (isStormy) return 'linear-gradient(180deg, #090c14 0%, #030408 100%)';
+      if (isRainy) return 'linear-gradient(180deg, #0c1018 0%, #05080f 100%)';
+      return 'linear-gradient(180deg, #0f1422 0%, #080a12 100%)';
+    } else {
+      if (isStormy) return 'linear-gradient(180deg, #161b24 0%, #0d1117 100%)';
+      if (isRainy) return 'linear-gradient(180deg, #18232c 0%, #0e151b 100%)';
+      return 'linear-gradient(180deg, #1a2932 0%, #111b21 100%)';
+    }
+  };
 
   if (!isGameStarted) return <MainMenu />;
   if (isGameOver) return <GameOver />;
@@ -47,7 +63,8 @@ function App() {
       maxHeight: '100dvh',
       margin: '0 auto',
       padding: '10px',
-      backgroundColor: '#1e1e1e',
+      background: getAtmosphereBg(),
+      transition: 'background 1.5s ease',
       boxSizing: 'border-box',
       display: 'flex',
       flexDirection: 'column',
@@ -55,24 +72,45 @@ function App() {
       position: 'relative',
       overflow: 'hidden'
     }}>
+      {/* Atmosfer Katmanları */}
+      {isNight ? <div className="night-ambiance" /> : <div className="day-ambiance" />}
+      {isRainy && <div className="rain-layer" />}
+      {isStormy && (
+        <>
+          <div className="rain-layer storm" />
+          <div className="lightning-layer" />
+        </>
+      )}
 
-      <GameHeader vitals={vitals} />
+      {/* Sal & Ana Oyun Alanı (Okyanus Salınımı) */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        flex: 1,
+        minHeight: 0,
+        animation: isStormy ? 'oceanSwayStorm 3.5s ease-in-out infinite' : 'oceanSwayCalm 7s ease-in-out infinite',
+        transformOrigin: 'center center',
+        zIndex: 3
+      }}>
+        <GameHeader vitals={vitals} />
 
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button onClick={() => setOpenModal(openModal === 'inventory' ? null : 'inventory')} style={{ flex: 1, padding: '10px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
-          <Backpack size={16} /> Çanta
-        </button>
-        <button onClick={() => setOpenModal(openModal === 'building' ? null : 'building')} style={{ flex: 1, padding: '10px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
-          <Hammer size={16} /> Üretim
-        </button>
-        <button onClick={() => setOpenModal(openModal === 'exploration' ? null : 'exploration')} style={{ flex: 1, padding: '10px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
-          <Map size={16} /> Keşif
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => setOpenModal(openModal === 'inventory' ? null : 'inventory')} style={{ flex: 1, padding: '10px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
+            <Backpack size={16} /> Çanta
+          </button>
+          <button onClick={() => setOpenModal(openModal === 'building' ? null : 'building')} style={{ flex: 1, padding: '10px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
+            <Hammer size={16} /> Üretim
+          </button>
+          <button onClick={() => setOpenModal(openModal === 'exploration' ? null : 'exploration')} style={{ flex: 1, padding: '10px', backgroundColor: '#8b5a2b', color: '#fff', border: '2px solid #5c3a21', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
+            <Map size={16} /> Keşif
+          </button>
+        </div>
+
+        <MerchantEvent />
+        <LogDisplay logs={logs} />
+        <ActionPanel hasHook={hasHook} buildings={buildings} />
       </div>
-
-      <MerchantEvent />
-      <LogDisplay logs={logs} />
-      <ActionPanel hasHook={hasHook} buildings={buildings} />
 
       {/* SABİT, MERKEZİ VE MOBİL UYUMLU PENCERE SİSTEMİ */}
       {openModal !== null && (

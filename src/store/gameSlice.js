@@ -75,7 +75,10 @@ const initialState = {
     buildings: {
         collectionNet: 0,
         waterPurifier: false,
-        grill: false
+        grill: false,
+        raftSize: 4,
+        shelter: false,
+        sail: false
     },
     merchant: {
         active: false,
@@ -100,6 +103,7 @@ const initialState = {
     isGameWon: false,
     isGameStarted: false,
     isGamePaused: false,
+    isSoundEnabled: true,
 };
 
 export const gameSlice = createSlice({
@@ -328,7 +332,9 @@ export const gameSlice = createSlice({
                 }
             } else if (state.weather === 'stormy') {
                 if (Math.floor(Math.random() * 100) < 10) {
-                    if (hasEnough(state, 'wood', 1)) {
+                    if (state.buildings.shelter) {
+                        state.logs.unshift("🛡️ Dev bir dalga salına çarptı ama Gölgelik sayesinde korundun!");
+                    } else if (hasEnough(state, 'wood', 1)) {
                         removeItems(state, 'wood', 1);
                         state.logs.unshift("🌊 Dev bir dalga salına çarptı! 1 Tahtan denize uçtu.");
                     } else {
@@ -368,9 +374,15 @@ export const gameSlice = createSlice({
                             state.logs.unshift("Mızrağın KIRILDI!");
                         }
                     } else {
-                        state.vitals.health -= 10;
-                        if (hasEnough(state, 'wood', 1)) removeItems(state, 'wood', 1);
-                        state.logs.unshift("🦈 KÖPEK BALIĞI SALDIRDI! Salın hasar gördü ve yaralandın. (-10 Can, -1 Tahta)");
+                        if (state.buildings.raftSize > 4) {
+                            state.buildings.raftSize -= 1;
+                            state.vitals.health -= 5;
+                            state.logs.unshift("🦈 KÖPEK BALIĞI SALDIRDI! Salın kenarını ısırıp 1 ahşap temeli parçaladı! (-5 Can, -1 Sal Temeli)");
+                        } else {
+                            state.vitals.health -= 10;
+                            if (hasEnough(state, 'wood', 1)) removeItems(state, 'wood', 1);
+                            state.logs.unshift("🦈 KÖPEK BALIĞI SALDIRDI! Salın hasar gördü ve yaralandın. (-10 Can, -1 Tahta)");
+                        }
                     }
                     state.sharkCooldown = Math.floor(Math.random() * 20) + 40;
                 }
@@ -604,12 +616,14 @@ export const gameSlice = createSlice({
             if (oarIndex === -1) {
                 state.logs.unshift("Açık denizlerde ilerlemek ve adaları keşfetmek için Kürek üretmelisin!"); return;
             }
-            if (state.vitals.hunger < 25 || state.vitals.thirst < 25) {
-                state.logs.unshift("Adayı keşfedecek gücün yok. (En az 25 Açlık ve Susuzluk gerekli)"); return;
+
+            const energyCost = state.buildings.sail ? 12 : 25;
+            if (state.vitals.hunger < energyCost || state.vitals.thirst < energyCost) {
+                state.logs.unshift(`Adayı keşfedecek gücün yok. (En az ${energyCost} Açlık ve Susuzluk gerekli)`); return;
             }
 
-            state.vitals.hunger -= 25;
-            state.vitals.thirst -= 25;
+            state.vitals.hunger -= energyCost;
+            state.vitals.thirst -= energyCost;
             state.equipment[oarIndex].durability -= 10;
             const isOarBroken = state.equipment[oarIndex].durability <= 0;
 
@@ -622,9 +636,10 @@ export const gameSlice = createSlice({
             if (!hasBattery) missingRares.push({ id: 'military_battery', name: 'Askeri Batarya', desc: 'Eski bir sığınakta dolu bir' });
             if (!hasAntenna) missingRares.push({ id: 'signal_antenna', name: 'Sinyal Anteni', desc: 'Kumların arasına gömülü paslanmaz bir' });
 
+            const findRareThreshold = state.buildings.sail ? 40 : 25;
             const findRareRoll = Math.floor(Math.random() * 100);
 
-            if (missingRares.length > 0 && findRareRoll < 25) {
+            if (missingRares.length > 0 && findRareRoll < findRareThreshold) {
                 const chosen = missingRares[Math.floor(Math.random() * missingRares.length)];
                 if (addItem(state, chosen.id)) {
                     state.logs.unshift(`🌟 İNANILMAZ! ${chosen.desc} '${chosen.name}' buldun!`);
@@ -688,6 +703,49 @@ export const gameSlice = createSlice({
                 state.logs.unshift("Izgara kurdun! Artık tuttuğun çiğ balıkları pişirebilirsin.");
             } else {
                 state.logs.unshift(`Izgara için ${costWood} Tahta, ${costMetal} Metal lazım!`);
+            }
+        },
+
+        buildFoundation: (state) => {
+            if (state.isGameOver) return;
+            const costWood = 4; const costPlastic = 2;
+            if (hasEnough(state, 'wood', costWood) && hasEnough(state, 'plastic', costPlastic)) {
+                removeItems(state, 'wood', costWood);
+                removeItems(state, 'plastic', costPlastic);
+                if (!state.buildings.raftSize) state.buildings.raftSize = 4;
+                state.buildings.raftSize += 1;
+                state.logs.unshift(`🪵 Salını genişlettin! Yeni ahşap temel eklendi. (Toplam Sal: ${state.buildings.raftSize} Temel)`);
+            } else {
+                state.logs.unshift(`Ahşap Temel için ${costWood} Tahta ve ${costPlastic} Plastik gerekiyor!`);
+            }
+        },
+
+        buildShelter: (state) => {
+            if (state.isGameOver) return;
+            if (state.buildings.shelter) { state.logs.unshift("Zaten bir Gölgeliğin var!"); return; }
+            const costWood = 8; const costLeaf = 6;
+            if (hasEnough(state, 'wood', costWood) && hasEnough(state, 'leaf', costLeaf)) {
+                removeItems(state, 'wood', costWood);
+                removeItems(state, 'leaf', costLeaf);
+                state.buildings.shelter = true;
+                state.logs.unshift("⛺ Salına sağlam bir Gölgelik kurdun! Artık fırtına dalgaları sana zarar veremeyecek.");
+            } else {
+                state.logs.unshift(`Gölgelik için ${costWood} Tahta ve ${costLeaf} Yaprak gerekiyor!`);
+            }
+        },
+
+        buildSail: (state) => {
+            if (state.isGameOver) return;
+            if (state.buildings.sail) { state.logs.unshift("Zaten bir Yelkenin var!"); return; }
+            const costWood = 6; const costLeaf = 8; const costPlastic = 4;
+            if (hasEnough(state, 'wood', costWood) && hasEnough(state, 'leaf', costLeaf) && hasEnough(state, 'plastic', costPlastic)) {
+                removeItems(state, 'wood', costWood);
+                removeItems(state, 'leaf', costLeaf);
+                removeItems(state, 'plastic', costPlastic);
+                state.buildings.sail = true;
+                state.logs.unshift("⛵ Salına bir Ahşap Yelken gerdin! Ada keşifleri artık yarı yarıya daha az enerji harcayacak.");
+            } else {
+                state.logs.unshift(`Yelken için ${costWood} Tahta, ${costLeaf} Yaprak ve ${costPlastic} Plastik gerekiyor!`);
             }
         },
 
@@ -779,7 +837,7 @@ export const gameSlice = createSlice({
             state.inventory = Array(INVENTORY_SIZE).fill(null);
             state.equipment = [{ itemId: 'hook', id: 'start_hook', durability: TOOL_STATS.hook.maxDurability, maxDurability: TOOL_STATS.hook.maxDurability }];
             state.merchant = { active: false, timer: 0, offer: { costItem: '', costCount: 0, rewardItem: '', rewardCount: 0 } };
-            state.buildings = { collectionNet: 0, waterPurifier: false, grill: false };
+            state.buildings = { collectionNet: 0, waterPurifier: false, grill: false, raftSize: 4, shelter: false, sail: false };
             state.logs = ["Uçsuz bucaksız okyanusta, küçük bir salın üzerindesin..."];
             state.tickCount = 0;
             state.day = 1;
@@ -799,10 +857,13 @@ export const gameSlice = createSlice({
             state.isGameStarted = true;
         },
 
-        restartGame: () => { return initialState; }
+        restartGame: () => { return initialState; },
+        toggleSound: (state) => {
+            state.isSoundEnabled = !state.isSoundEnabled;
+        }
     }
 });
 
-export const { debugGiveAllItems, dropItem, swapInventorySlots, throwHook, gameTick, startGame, startNewGame, pauseGame, resumeGame, quitToMenu, restartGame, craftFishingRod, craftEmptyCup, fillCup, startCooking, startPurifying, startFishingMode, endFishingMode, drinkWater, eatFood, buildNet, buildPurifier, buildGrill, buildSOS, craftSpear, craftHook, gatherByHand, craftOar, exploreIsland, craftBandage, useBandage, tradeWithMerchant } = gameSlice.actions;
+export const { debugGiveAllItems, dropItem, swapInventorySlots, throwHook, gameTick, startGame, startNewGame, pauseGame, resumeGame, quitToMenu, restartGame, craftFishingRod, craftEmptyCup, fillCup, startCooking, startPurifying, startFishingMode, endFishingMode, drinkWater, eatFood, buildNet, buildPurifier, buildGrill, buildFoundation, buildShelter, buildSail, buildSOS, craftSpear, craftHook, gatherByHand, craftOar, exploreIsland, craftBandage, useBandage, tradeWithMerchant, toggleSound } = gameSlice.actions;
 
 export default gameSlice.reducer;

@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { startGame, startNewGame } from "../../store/gameSlice";
-import { Play, Plus, Settings, Info, AlertTriangle, X, Check, Code, Globe, Volume2 } from "lucide-react";
+import { startGame, startNewGame, toggleSound } from "../../store/gameSlice";
+import { Play, Plus, Settings, Info, AlertTriangle, X, Check, Code, Globe, Volume2, VolumeX } from "lucide-react";
+import { playClick } from "../../utils/soundEffects";
 
 const MainMenu = () => {
     const dispatch = useDispatch();
-    const { logs, inventory, vitals, day, tickCount } = useSelector((state) => state.game);
+    const { logs, inventory, vitals, day, tickCount, isSoundEnabled } = useSelector((state) => state.game);
 
     // Açılır pencerelerin (modal) durumlarını tutan state'ler
     const [showConfirm, setShowConfirm] = useState(false);
@@ -188,8 +189,28 @@ const MainMenu = () => {
                         <h2 style={{ color: '#fff', fontSize: '22px', margin: '0 0 15px 0' }}>Oyun Ayarları</h2>
 
                         <div style={{ backgroundColor: '#22150f', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #332014' }}>
-                            <span style={{ color: '#aaa', display: 'flex', alignItems: 'center', gap: '8px' }}><Volume2 size={18} /> Ses Efektleri</span>
-                            <span style={{ color: '#ff6b81', fontWeight: 'bold', fontSize: '12px', backgroundColor: 'rgba(255, 107, 129, 0.2)', padding: '4px 8px', borderRadius: '4px' }}>YAKINDA</span>
+                            <span style={{ color: '#aaa', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {isSoundEnabled ? <Volume2 size={18} color="#4cd137" /> : <VolumeX size={18} color="#ff4757" />}
+                                Ses Efektleri
+                            </span>
+                            <button
+                                onClick={() => {
+                                    dispatch(toggleSound());
+                                    playClick(!isSoundEnabled);
+                                }}
+                                style={{
+                                    padding: '6px 14px',
+                                    backgroundColor: isSoundEnabled ? 'rgba(76, 209, 55, 0.2)' : 'rgba(255, 71, 87, 0.2)',
+                                    color: isSoundEnabled ? '#4cd137' : '#ff4757',
+                                    border: `1px solid ${isSoundEnabled ? '#4cd137' : '#ff4757'}`,
+                                    borderRadius: '6px',
+                                    fontWeight: 'bold',
+                                    fontSize: '13px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {isSoundEnabled ? 'AÇIK' : 'KAPALI'}
+                            </button>
                         </div>
 
                         <button
