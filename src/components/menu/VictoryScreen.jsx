@@ -1,10 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { quitToMenu } from "../../store/gameSlice";
+import { playVictory, playClick } from "../../utils/soundEffects";
 
 const VictoryScreen = () => {
     const dispatch = useDispatch();
-    const { day } = useSelector(state => state.game);
+    const { day, isSoundEnabled } = useSelector(state => state.game);
+
+    useEffect(() => {
+        playVictory(isSoundEnabled);
+    }, [isSoundEnabled]);
 
     return (
         <div style={{
@@ -41,7 +46,10 @@ const VictoryScreen = () => {
             </div>
 
             <button
-                onClick={() => dispatch(quitToMenu())}
+                onClick={() => {
+                    playClick(isSoundEnabled);
+                    dispatch(quitToMenu());
+                }}
                 style={{
                     padding: '15px 40px', backgroundColor: '#4cd137', color: '#111',
                     fontSize: '16px', fontWeight: 'bold', border: 'none', borderRadius: '8px',

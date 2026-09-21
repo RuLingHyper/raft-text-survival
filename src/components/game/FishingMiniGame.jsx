@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { endFishingMode } from "../../store/gameSlice";
 import { Fish, X } from "lucide-react";
+import { playCatchFish, playClick } from "../../utils/soundEffects";
 
 const FishingMiniGame = () => {
     const dispatch = useDispatch();
+    const isSoundEnabled = useSelector((state) => state.game.isSoundEnabled);
     const [position, setPosition] = useState(50);
     const [hits, setHits] = useState(0);
 
@@ -53,15 +55,20 @@ const FishingMiniGame = () => {
             setHits(newHits);
 
             if (newHits >= requiredHits) {
+                playCatchFish(isSoundEnabled);
                 const reward = Math.random() < 0.80 ? 'fish' : 'trash';
                 dispatch(endFishingMode({ success: true, reward }));
+            } else {
+                playClick(isSoundEnabled);
             }
         } else {
+            playClick(isSoundEnabled);
             dispatch(endFishingMode({ success: false, reward: null }));
         }
     };
 
     const handleCancel = () => {
+        playClick(isSoundEnabled);
         dispatch(endFishingMode({ cancelled: true }));
     };
 

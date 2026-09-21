@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useBandage, drinkWater, eatFood, dropItem, swapInventorySlots, fillCup, startPurifying, startFishingMode, startCooking } from "../../store/gameSlice";
 import { TreePine, Box, Leaf, Wrench, PlusSquare, Droplets, Utensils, Trash2, CheckCircle, Cpu, Battery, Radio, Fish, Coffee, Waves, Anchor, Sword, Compass } from "lucide-react";
+import { playDrink, playEat, playClick } from "../../utils/soundEffects";
 
 // ==========================================
 // SABİT EŞYA ÖZELLİKLERİ (METADATA SÖZLÜĞÜ)
@@ -80,6 +81,7 @@ const InventorySlot = ({ item, index, isSelected, onDragStart, onDrop, onDragOve
 const InventoryDisplay = ({ inventory }) => {
     const dispatch = useDispatch();
     const equipment = useSelector((state) => state.game.equipment) || [];
+    const isSoundEnabled = useSelector((state) => state.game.isSoundEnabled);
     const [activeSlotIndex, setActiveSlotIndex] = useState(null);
     const [swapSourceIndex, setSwapSourceIndex] = useState(null);
     const [dropAmount, setDropAmount] = useState(1);
@@ -231,6 +233,13 @@ const InventoryDisplay = ({ inventory }) => {
                         {activeItemProps.isUsable && (
                             <button
                                 onClick={() => {
+                                    if (activeItemProps.itemId === 'water' || activeItemProps.itemId === 'salt_water' || activeItemProps.itemId === 'empty_cup') {
+                                        playDrink(isSoundEnabled);
+                                    } else if (activeItemProps.itemId === 'food' || activeItemProps.itemId === 'raw_fish') {
+                                        playEat(isSoundEnabled);
+                                    } else {
+                                        playClick(isSoundEnabled);
+                                    }
                                     dispatch(activeItemProps.action());
                                     if (activeItemProps.count <= 1) {
                                         setActiveSlotIndex(null);
@@ -245,6 +254,7 @@ const InventoryDisplay = ({ inventory }) => {
                         {/* 3. TAŞI BUTONU (Mobilde Kolay Yer Değiştirme) */}
                         <button
                             onClick={() => {
+                                playClick(isSoundEnabled);
                                 setSwapSourceIndex(activeSlotIndex);
                                 setActiveSlotIndex(null);
                             }}

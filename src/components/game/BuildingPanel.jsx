@@ -1,29 +1,43 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { buildNet, buildPurifier, buildGrill, craftBandage, craftSpear, craftOar, buildSOS, craftFishingRod, craftEmptyCup } from "../../store/gameSlice";
-import { Grid, Droplets, Flame, PlusSquare, Utensils, Hammer, Sword, Compass, Radio, Fish, Coffee } from "lucide-react";
+import { buildNet, buildPurifier, buildGrill, craftBandage, craftSpear, craftOar, buildSOS, craftFishingRod, craftEmptyCup, buildFoundation, buildShelter, buildSail } from "../../store/gameSlice";
+import { Grid, Droplets, Flame, PlusSquare, Utensils, Hammer, Sword, Compass, Radio, Fish, Coffee, Layers, Tent, Wind } from "lucide-react";
+import { playCraft, playClick } from "../../utils/soundEffects";
 
 // ==========================================
 // ALT BİLEŞENLER
 // ==========================================
-const CategoryBtn = ({ id, icon, currentCategory, setCategory }) => (
-    <button
-        onClick={() => setCategory(id)}
-        style={{
-            width: '50px', height: '50px',
-            backgroundColor: currentCategory === id ? '#8d6e63' : '#3e2723',
-            border: '2px solid #5c3a21', borderRadius: '4px',
-            color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}
-    >
-        {icon}
-    </button>
-);
+const CategoryBtn = ({ id, icon, currentCategory, setCategory }) => {
+    const isSoundEnabled = useSelector((state) => state.game.isSoundEnabled);
+    return (
+        <button
+            onClick={() => {
+                playClick(isSoundEnabled);
+                setCategory(id);
+            }}
+            style={{
+                width: '50px', height: '50px',
+                backgroundColor: currentCategory === id ? '#8d6e63' : '#3e2723',
+                border: '2px solid #5c3a21', borderRadius: '4px',
+                color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}
+        >
+            {icon}
+        </button>
+    );
+};
 
 const CraftCard = ({ name, desc, icon, costs, onCraft, isBuilt, btnText }) => {
+    const isSoundEnabled = useSelector((state) => state.game.isSoundEnabled);
     // costs: [{ name: 'Tahta', count: 4, has: 10 }, ...]
     const canAfford = costs.every(c => c.has >= c.count);
     const disabled = isBuilt || !canAfford;
+
+    const handleCraft = () => {
+        if (disabled) return;
+        playCraft(isSoundEnabled);
+        onCraft();
+    };
 
     return (
         <div style={{
@@ -55,7 +69,7 @@ const CraftCard = ({ name, desc, icon, costs, onCraft, isBuilt, btnText }) => {
                 </div>
             </div>
             <button
-                onClick={onCraft}
+                onClick={handleCraft}
                 disabled={disabled}
                 style={{
                     padding: '10px 14px',
@@ -108,6 +122,7 @@ const BuildingPanel = ({ buildings }) => {
             }}>
                 <CategoryBtn id="food" icon={<Utensils size={24} />} currentCategory={category} setCategory={setCategory} />
                 <CategoryBtn id="tools" icon={<Hammer size={24} />} currentCategory={category} setCategory={setCategory} />
+                <CategoryBtn id="structures" icon={<Layers size={24} />} currentCategory={category} setCategory={setCategory} />
                 <CategoryBtn id="weapons" icon={<Sword size={24} />} currentCategory={category} setCategory={setCategory} />
                 <CategoryBtn id="medical" icon={<PlusSquare size={24} />} currentCategory={category} setCategory={setCategory} />
             </div>
@@ -131,6 +146,7 @@ const BuildingPanel = ({ buildings }) => {
                 }}>
                     {category === "food" && "YİYECEK & İÇECEK"}
                     {category === "tools" && "ARAÇ GEREÇLER"}
+                    {category === "structures" && "YAPILAR & İNŞAAT"}
                     {category === "weapons" && "SİLAHLAR"}
                     {category === "medical" && "TIBBİ MALZEMELER"}
                 </h3>
@@ -226,6 +242,47 @@ const BuildingPanel = ({ buildings }) => {
                                 icon={<Radio size={24} color="#ff3f34" />}
                                 btnText="İNŞA ET VE KURTUL"
                                 onCraft={() => dispatch(buildSOS())}
+                            />
+                        </>
+                    )}
+
+                    {category === "structures" && (
+                        <>
+                            <CraftCard
+                                name={`Ahşap Temel (${buildings.raftSize || 4} Mevcut)`}
+                                desc="Salını 1 kare genişletir ve köpek balığı saldırılarına karşı korur."
+                                costs={[
+                                    { name: 'Tahta', count: 4, has: countWood },
+                                    { name: 'Plastik', count: 2, has: countPlastic }
+                                ]}
+                                icon={<Layers size={24} color="#d2b48c" />}
+                                btnText="Genişlet"
+                                onCraft={() => dispatch(buildFoundation())}
+                            />
+                            <CraftCard
+                                name="Gölgelik (Çatı)"
+                                desc="Fırtına dalgalarının salına hasar vermesini tamamen engeller."
+                                costs={[
+                                    { name: 'Tahta', count: 8, has: countWood },
+                                    { name: 'Yaprak', count: 6, has: countLeaf }
+                                ]}
+                                icon={<Tent size={24} color="#4cd137" />}
+                                isBuilt={buildings.shelter}
+                                btnText="Kur"
+                                onCraft={() => dispatch(buildShelter())}
+                            />
+                            <CraftCard
+                                name="Ahşap Yelken"
+                                desc="Ada keşif maliyetini yarıya düşürür (%50 indirim) ve nadir eşya bulma şansını artırır."
+                                costs={[
+                                    { name: 'Tahta', count: 6, has: countWood },
+                                    { name: 'Yaprak', count: 8, has: countLeaf },
+                                    { name: 'Plastik', count: 4, has: countPlastic }
+                                ]}
+                                icon={<Wind size={24} color="#0fbcf9" />}
+                                isBuilt={buildings.sail}
+                                btnText="Kur"
+                                onCraft={() => dispatch(buildSail())}
                             />
                         </>
                     )}

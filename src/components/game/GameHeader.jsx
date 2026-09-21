@@ -18,7 +18,7 @@ const GameHeader = ({ vitals }) => {
         <div style={{
             display: 'flex', flexDirection: 'column', gap: '8px',
             backgroundColor: isNight ? 'rgba(20, 20, 30, 0.85)' : 'rgba(139, 90, 43, 0.2)', // Gece karanlık, gündüz ahşap
-            border: isNight ? '2px solid #2d3436' : '2px solid #5c3a21',
+            border: weather === 'stormy' ? '2px solid #e17055' : isNight ? '2px solid #2d3436' : '2px solid #5c3a21',
             padding: '10px 12px', borderRadius: '10px',
             transition: 'all 1s ease'
         }}>
@@ -36,8 +36,13 @@ const GameHeader = ({ vitals }) => {
 
                     {/* HAVA DURUMU İKONU */}
                     <div style={{ display: 'flex', alignItems: 'center', marginLeft: '5px' }}>
-                        {weather === 'rainy' && <CloudRain size={20} color="#74b9ff" />}
-                        {weather === 'stormy' && <CloudLightning size={20} color="#fdcb6e" />}
+                        {weather === 'rainy' && <CloudRain size={20} color="#74b9ff" title="Yağmurlu" />}
+                        {weather === 'stormy' && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: 'rgba(235, 77, 75, 0.25)', padding: '2px 6px', borderRadius: '4px', border: '1px solid #eb4d4b' }}>
+                                <CloudLightning size={16} color="#fdcb6e" style={{ animation: 'floatPulse 1s infinite' }} />
+                                <span style={{ fontSize: '11px', color: '#ff7675', fontWeight: 'bold' }}>FIRTINA!</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 

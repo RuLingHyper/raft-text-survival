@@ -1,16 +1,18 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { exploreIsland } from "../../store/gameSlice";
-import { Map, ShieldAlert, ShieldCheck, Anchor } from "lucide-react";
+import { Map, ShieldAlert, ShieldCheck, Anchor, Wind, Tent, Layers } from "lucide-react";
 
 const DefenseExplorationPanel = ({ hasSpear, hasOar }) => {
     const dispatch = useDispatch();
     const vitals = useSelector((state) => state.game.vitals) || { health: 100, hunger: 100, thirst: 100 };
+    const buildings = useSelector((state) => state.game.buildings) || {};
     const equipment = useSelector((state) => state.game.equipment) || [];
     const oar = equipment.find(item => item.itemId === 'oar');
     const spear = equipment.find(item => item.itemId === 'spear');
 
-    const hasEnoughEnergy = vitals.hunger >= 25 && vitals.thirst >= 25;
+    const energyCost = buildings.sail ? 12 : 25;
+    const hasEnoughEnergy = vitals.hunger >= energyCost && vitals.thirst >= energyCost;
     const canExplore = hasOar && hasEnoughEnergy;
 
     const oarPercent = oar ? Math.max(0, Math.round((oar.durability / oar.maxDurability) * 100)) : 0;
@@ -26,45 +28,60 @@ const DefenseExplorationPanel = ({ hasSpear, hasOar }) => {
             </h3>
 
             {/* Durum Bilgi Kutuları */}
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                <div style={{ flex: 1, backgroundColor: "rgba(139, 90, 43, 0.2)", border: "2px solid #5c3a21", borderRadius: "6px", padding: "10px", textAlign: 'center' }}>
-                    <div style={{ color: hasOar ? '#4cd137' : '#aaa', marginBottom: '5px', display: 'flex', justifyContent: 'center' }}>
-                        <Anchor size={24} />
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                <div style={{ flex: 1, backgroundColor: "rgba(139, 90, 43, 0.2)", border: "2px solid #5c3a21", borderRadius: "6px", padding: "8px", textAlign: 'center' }}>
+                    <div style={{ color: hasOar ? '#4cd137' : '#aaa', marginBottom: '4px', display: 'flex', justifyContent: 'center' }}>
+                        <Anchor size={20} />
                     </div>
-                    <div style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold' }}>Seyahat Durumu</div>
-                    <div style={{ color: hasOar ? '#4cd137' : '#ffb142', fontSize: '11px', marginTop: '3px' }}>
-                        {hasOar ? "Kürek Kuşanıldı" : "Sürükleniyor..."}
+                    <div style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>Seyahat</div>
+                    <div style={{ color: hasOar ? '#4cd137' : '#ffb142', fontSize: '11px', marginTop: '2px' }}>
+                        {hasOar ? "Kürek Var" : "Sürükleniyor"}
                     </div>
                     {hasOar && oar && (
-                        <div style={{ marginTop: '6px' }}>
-                            <div style={{ width: '100%', height: '4px', backgroundColor: '#33231b', borderRadius: '2px', overflow: 'hidden', marginBottom: '3px' }}>
+                        <div style={{ marginTop: '4px' }}>
+                            <div style={{ width: '100%', height: '4px', backgroundColor: '#33231b', borderRadius: '2px', overflow: 'hidden', marginBottom: '2px' }}>
                                 <div style={{ width: `${oarPercent}%`, height: '100%', backgroundColor: oarBarColor }} />
                             </div>
                             <span style={{ fontSize: '10px', color: oarBarColor, fontWeight: 'bold' }}>
-                                {oar.durability}/{oar.maxDurability} (%{oarPercent})
+                                %{oarPercent}
                             </span>
                         </div>
                     )}
                 </div>
 
-                <div style={{ flex: 1, backgroundColor: "rgba(139, 90, 43, 0.2)", border: "2px solid #5c3a21", borderRadius: "6px", padding: "10px", textAlign: 'center' }}>
-                    <div style={{ color: hasSpear ? '#4cd137' : '#ff4757', marginBottom: '5px', display: 'flex', justifyContent: 'center' }}>
-                        {hasSpear ? <ShieldCheck size={24} /> : <ShieldAlert size={24} />}
+                <div style={{ flex: 1, backgroundColor: "rgba(139, 90, 43, 0.2)", border: "2px solid #5c3a21", borderRadius: "6px", padding: "8px", textAlign: 'center' }}>
+                    <div style={{ color: hasSpear ? '#4cd137' : '#ff4757', marginBottom: '4px', display: 'flex', justifyContent: 'center' }}>
+                        {hasSpear ? <ShieldCheck size={20} /> : <ShieldAlert size={20} />}
                     </div>
-                    <div style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold' }}>Savunma</div>
-                    <div style={{ color: hasSpear ? '#4cd137' : '#ff4757', fontSize: '11px', marginTop: '3px' }}>
-                        {hasSpear ? "Mızrak Kuşanıldı" : "Savunmasız!"}
+                    <div style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>Savunma</div>
+                    <div style={{ color: hasSpear ? '#4cd137' : '#ff4757', fontSize: '11px', marginTop: '2px' }}>
+                        {hasSpear ? "Mızrak Var" : "Savunmasız"}
                     </div>
                     {hasSpear && spear && (
-                        <div style={{ marginTop: '6px' }}>
-                            <div style={{ width: '100%', height: '4px', backgroundColor: '#33231b', borderRadius: '2px', overflow: 'hidden', marginBottom: '3px' }}>
+                        <div style={{ marginTop: '4px' }}>
+                            <div style={{ width: '100%', height: '4px', backgroundColor: '#33231b', borderRadius: '2px', overflow: 'hidden', marginBottom: '2px' }}>
                                 <div style={{ width: `${spearPercent}%`, height: '100%', backgroundColor: spearBarColor }} />
                             </div>
                             <span style={{ fontSize: '10px', color: spearBarColor, fontWeight: 'bold' }}>
-                                {spear.durability}/{spear.maxDurability} (%{spearPercent})
+                                %{spearPercent}
                             </span>
                         </div>
                     )}
+                </div>
+
+                <div style={{ flex: 1, backgroundColor: "rgba(139, 90, 43, 0.2)", border: "2px solid #5c3a21", borderRadius: "6px", padding: "8px", textAlign: 'center' }}>
+                    <div style={{ color: '#d2b48c', marginBottom: '4px', display: 'flex', justifyContent: 'center' }}>
+                        <Layers size={20} />
+                    </div>
+                    <div style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>Sal Boyutu</div>
+                    <div style={{ color: '#4cd137', fontSize: '11px', marginTop: '2px', fontWeight: 'bold' }}>
+                        {buildings.raftSize || 4} Temel
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#aaa', marginTop: '4px', display: 'flex', justifyContent: 'center', gap: '4px' }}>
+                        {buildings.shelter ? <Tent size={12} color="#4cd137" title="Gölgelik Var" /> : null}
+                        {buildings.sail ? <Wind size={12} color="#0fbcf9" title="Yelken Açık" /> : null}
+                        {!buildings.shelter && !buildings.sail && <span>Standart</span>}
+                    </div>
                 </div>
             </div>
 
@@ -74,11 +91,18 @@ const DefenseExplorationPanel = ({ hasSpear, hasOar }) => {
                 <div>
                     <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '16px' }}>Bilinmeyen Adayı Keşfet</div>
                     <div style={{ color: '#aaa', fontSize: '12px', marginTop: '4px' }}>Adada değerli kaynaklar ve kurtarma parçaları bulabilirsin.</div>
+                    
+                    {buildings.sail && (
+                        <div style={{ color: '#0fbcf9', fontSize: '11px', fontWeight: 'bold', marginTop: '4px' }}>
+                            ⛵ Yelken Etkin: Keşif Maliyeti %50 İndirimli!
+                        </div>
+                    )}
+
                     <div style={{
                         color: hasEnoughEnergy ? '#4cd137' : '#ff4757',
                         fontSize: '13px', fontWeight: 'bold', marginTop: '6px'
                     }}>
-                        Maliyet: -25 Açlık (%{vitals.hunger}/25) ve -25 Susuzluk (%{vitals.thirst}/25)
+                        Maliyet: -{energyCost} Açlık (%{vitals.hunger}/{energyCost}) ve -{energyCost} Susuzluk (%{vitals.thirst}/{energyCost})
                     </div>
                 </div>
                 <button
@@ -96,7 +120,7 @@ const DefenseExplorationPanel = ({ hasSpear, hasOar }) => {
                     {!hasOar
                         ? "Önce Ahşap Kürek Üretmelisin"
                         : !hasEnoughEnergy
-                            ? "Adaya Gidecek Gücün Yok (Min %25)"
+                            ? `Adaya Gidecek Gücün Yok (Min %${energyCost})`
                             : "Küreklere Asıl ve Keşfet!"}
                 </button>
             </div>
